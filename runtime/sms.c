@@ -51,7 +51,7 @@ int mprace_owns_input(void);
 #define G_CAREER_RACE 0x00863470u   /* the career race being run, 0: free roam */
 #define G_ENGAGE      0x008900d8u   /* the engage manager: [it] 4 = free to engage (what 0x529750 waits for too) */
 #define FREE_S        3             /* this long in free roam first */
-#define FROM          "nfsu2.xyz"
+#define FROM          "undrgnd2.eu"
 #define RETRY_S       60            /* a full inbox: again after this long */
 
 /* the texts of each message, in the languages whose fonts have Latin

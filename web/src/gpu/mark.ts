@@ -9,7 +9,7 @@ export const markFont = (px: number) => `italic 700 ${px}px "Helvetica Neue", He
 /** the address's ink at size px, about the start of its baseline: l left of it, r right of it, a above it, d under it */
 export function markBox(g: Ctx, px: number) {
   g.font = markFont(px);
-  const m = g.measureText('nfsu2.xyz');
+  const m = g.measureText('undrgnd2.eu');
   return { w: m.width, l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent };
 }
 
@@ -18,7 +18,7 @@ export function drawMark(g: Ctx, px: number, x: number, y: number) {
   g.save();
   g.font = markFont(px);
   g.shadowColor = 'rgba(0,0,0,0.65)'; g.shadowBlur = px * 0.3; g.shadowOffsetY = Math.max(1, px * 0.06);
-  g.fillStyle = 'rgba(255,255,255,0.92)'; g.fillText('nfsu2', x, y);
-  g.fillStyle = '#b8de7d'; g.fillText('.xyz', x + g.measureText('nfsu2').width, y);
+  g.fillStyle = 'rgba(255,255,255,0.92)'; g.fillText('undrgnd2', x, y);
+  g.fillStyle = '#b8de7d'; g.fillText('.eu', x + g.measureText('undrgnd2').width, y);
   g.restore();
 }
