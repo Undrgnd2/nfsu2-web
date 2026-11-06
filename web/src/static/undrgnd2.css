@@ -1,0 +1,59 @@
+/* UNDRGND2 — the site's look for undrgnd2.eu.
+ * Loaded after main.css (one line in index.html) and only overrides it: th0mk's stylesheet stays untouched,
+ * so his updates merge without conflicts.  Ice blue on night navy, after the UNDRGND2 logo and banner. */
+
+:root {
+  --bg: #050b14;
+  --frame: rgba(6, 14, 26, 0.94);
+  --panel: rgba(12, 26, 44, 0.9);
+  --field: #06101c;
+  --line: #1c3653;
+  --edge: #5f8bb3;
+  --text: #ffffff;
+  --muted: #a8c2db;
+  --lime: #4cc9ff;                      /* the accent: titles, values, the selected item */
+  --lime-fill: #0f3554;
+  --lime-glow: rgba(76, 201, 255, 0.45);
+}
+
+/* the night sky of the logo's artwork at the top of the page, fading into navy */
+body {
+  background:
+    linear-gradient(to bottom, rgba(5, 11, 20, 0.45) 0, rgba(5, 11, 20, 0.8) 360px, #050b14 720px) no-repeat,
+    url(/undrgnd2-bg.png) top center / 100% auto no-repeat,
+    #050b14;
+}
+
+/* the header: the banner's skyline behind the title */
+.top {
+  background:
+    linear-gradient(90deg, rgba(5, 11, 20, 0.93) 0%, rgba(5, 11, 20, 0.7) 45%, rgba(5, 11, 20, 0.35) 100%),
+    url(/undrgnd2-header.png) center / cover no-repeat,
+    var(--frame);
+  border: 1px solid rgba(76, 201, 255, 0.35);
+  box-shadow: 0 0 28px rgba(76, 201, 255, 0.18);
+}
+
+/* the title: chrome letters, an ice-blue 2, a blue glow (as the logo) */
+.brand h1 {
+  font-size: 40px; line-height: 48px; letter-spacing: 1px; text-transform: uppercase;
+  background: linear-gradient(180deg, #ffffff 0%, #e3ebf2 42%, #8d9fb0 52%, #f4f8fb 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #02060c) drop-shadow(0 0 8px rgba(76, 201, 255, 0.75));
+}
+.brand h1 .u2-two {
+  background: linear-gradient(180deg, #d4f6ff 0%, #4cc9ff 55%, #0d6db5 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* panels: a thin ice rim */
+.panel { border: 1px solid rgba(76, 201, 255, 0.16); }
+
+/* buttons */
+.btn { background: #06101c; }
+.play:hover:not(:disabled) { background: #164a70; }
+.stick-base.on { border-color: rgba(76, 201, 255, 0.5); }
+
+@media (max-width: 640px) {
+  .brand h1 { font-size: 32px; line-height: 40px; }
+}
