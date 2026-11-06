@@ -33,7 +33,13 @@
     pane.innerHTML = ABOUT[lang].map(t => `<p>${t}</p>`).join('');
   }
 
-  function apply() { title(); about(); }
+  // the header's Discord button: our community's server
+  const DISCORD = 'https://discord.gg/E2WSDb8z5U';
+  function discord() {
+    for (const a of document.querySelectorAll('.top-end a.btn[href*="discord.gg"]')) a.href = DISCORD;
+  }
+
+  function apply() { title(); about(); discord(); }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
   else apply();
