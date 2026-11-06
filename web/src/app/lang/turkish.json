@@ -1441,7 +1441,6 @@
   "The EA Trax songs unedited.": "EA Trax şarkıları düzenlenmemiş hâliyle.",
   "Engine sounds right above 60 fps.": "60 fps üstünde doğru motor sesleri.",
   "Drift camera, high beam, EU cars and more.": "Drift kamerası, uzun far, Avrupa arabaları ve dahası.",
-  "Seven vinyls from the Japanese release.": "Japon sürümünden yedi vinil.",
   "New rim brands in the rim shop.": "Jant mağazasında yeni jant markaları.",
   "Mod parts on other cars": "Diğer arabalardaki mod parçaları",
   "Original: other players' cars with the game's own parts instead.": "Orijinal: diğer oyuncuların arabaları yerine oyunun kendi parçalarıyla.",
@@ -1503,5 +1502,7 @@
   "{name} invites you to crew \"{crew}\"": "{name} seni \"{crew}\" ekibine davet ediyor",
   "Previous page": "Önceki sayfa",
   "Next page": "Sonraki sayfa",
-  "No friend has that name": "Bu adda arkadaş yok"
+  "No friend has that name": "Bu adda arkadaş yok",
+  "Built for this project": "Bu proje için geliştirildi",
+  "Distance to your destination beneath the GPS arrow.": "GPS okunun altında hedefinize olan mesafe."
 }
