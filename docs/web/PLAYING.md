@@ -343,6 +343,15 @@ Room set, the Room row says how many are in that room.
   and 8 stars in stages 1 to 4, 10 from stage 5), so every cover shoot of the stage is offered the next time free roam
   loads, and pays by that rating. The shops show no Visual Rating box. Turned off again, the next free-roam load
   offers the shoots by your car's own rating; the ones shot and paid stay.
+- **underground2.net Rims** (Mods): off by default. On, the Body Shop's Rims have Blitz, a brand of 24 rims from the
+  [underground2.net](https://nfsmods.xyz/mod/2004) mod, between BBS and Enkei. Everyone's game has them, so a friend's
+  car with them looks the same with this off; off, the shop offers only the game's own brands, and rims already on
+  your car stay. Your saves still work in the original game: there such a car has a similar rim of the game's in the
+  same size (Blitz BRW03: Avus AF-502, Technospeed Z1: Racing Hart CP8; the mod's parts are kept beside the profile,
+  in MODPARTS.DAT).
+- **Mod parts on other cars** (Mods, Seen by others): Shown by default, other players' cars with the mods' parts they
+  have. Original: those parts shown as the game's (the same look-alike rims, else the stock part), in free roam and in
+  races; your own car keeps its own either way.
 - **Upscaled HUD and Detailed Map** (Mods): Original (the default) is the game's own. Upscaled shows LunicAura106's
   [Upscaled HUD](https://nfsmods.xyz/mod/4319) and JeansBig's [Detailed Map](https://nfsmods.xyz/mod/4485) where the
   server has their texture packs: the menus, the race HUD, the fonts and the car and brand logos redrawn at four times
@@ -528,7 +537,7 @@ or use a Room to keep to a group.
 
 Good to know:
 
-- **How many:** up to 16000 players on a server set up with `web/deploy/` (2000 with the older Node server), 128 on
+- **How many:** up to 24000 players on a server set up with `web/deploy/` (2000 with the older Node server), 128 on
   one started by hand (its owner can change that). Only free roam and the LAN and Online screens take a place;
   single-player takes none. When it is full, you wait in line for a place, first come first served: the top of the
   screen shows your place and, once a few went in, about how long it takes. You play alone meanwhile and join the
@@ -820,8 +829,7 @@ Good to know:
   the list says so (pick a less common name). Capitals and spaces don't count ("Blue Room" is "blueroom"); a name that
   reads as a slur is no crew. Everyone else is still there, unlike a Room. Not private: anyone who types the same name
   joins, but other players never learn your crews: the server tells each game which players near it share one. A
-  player on an older version is in no crew. With no crew yet, the line under the crew box says how to get one (agree
-  on a name with your friends, or open a crew's invite link). A few seconds after you start driving in free roam, the
+  player on an older version is in no crew. A few seconds after you start driving in free roam, the
   log on the left has a line for each of your crews with others in free roam ("Night Owls 3 in free roam", in the
   crew's colour; you count too).
 - **Inviting a friend to a crew:** a friend who is in free roam now has a crew icon (two people) on their line, on the
@@ -845,7 +853,7 @@ Good to know:
   for Discord's Add Friend), an envelope for your messages (lime with a dot while some are unread) and a grey bin to
   remove them; a request you did not answer in the game waits there (30 days), with ✓ and ✕, and one
   you sent has a ✕ to take it back; a lime dot on the tab says requests or unread messages wait. Under the list,
-  **Add a player by name** sends a request to a player who is not near you: type their name (a claimed one) and press
+  **Add a player** sends a request to a player who is not near you: type their name (a claimed one) and press
   Enter or +. If they are driving in free roam, their line says **Al wants to be friends: accept** for 15 seconds
   (**F**, a click or a tap, or the page menu, accepts); a request that waited shows there at the next game's start.
   **Your Discord**, under it, is your Discord username for your friends (and nobody else) to add you on Discord: only
@@ -855,9 +863,9 @@ Good to know:
   and so do their arrows on the minimap and the world map. When a friend comes into free roam, the notices on the left
   say so (with **I Message** under it when they are in your room). The page menu has **Friends** in every game in
   free roam with other players: the requests to answer (✓ and ✕), who is in free roam, with **Join** for one in
-  another room and Discord's mark to copy one's Discord username, the others in a line, and **Add a player by name**;
+  another room and Discord's mark to copy one's Discord username, the others in a line, and **Add a player**;
   with no friends yet, it says how to add one. A friend is a
-  friend in the game's Online mode too (EA Messenger), up to 50. In free roam the server takes a request only between
+  friend in the game's Online mode too (EA Messenger), up to 250. In free roam the server takes a request only between
   two players whose cars are within 30 m of each other; by name, from the start page or the page menu, five at once and then one every
   30 seconds (a player you block in EA Messenger never sends you one again). Your friends see the name of
   the room you play in, nobody else (it is told to the server only once you have a friend, and kept in memory only).
