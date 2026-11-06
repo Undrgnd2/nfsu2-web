@@ -3,17 +3,18 @@
 // so his files stay untouched and his updates merge without conflicts.
 (() => {
   const NAME = 'UNDRGND2';
+  const DISCORD_LINK = '<a href="https://discord.com/invite/E2WSDb8z5U" target="_blank" rel="noopener noreferrer">Discord</a>';
   const PORT = '<a href="https://github.com/th0mk/nfsu2-web" target="_blank" rel="noopener noreferrer">nfsu2-web</a>';
   const ABOUT = {
     en: [
       'UNDRGND2 is a community server for Need for Speed: Underground 2, played right in your browser: free roam and Online races with players from all over the world.',
       `The browser port is th0mk's work (${PORT}). This server runs it and follows its updates; all the credit for it goes to him.`,
-      'Rights holders: undrgnd2.contact (at) gmail.com.',
+      `Races, crews and help: join us on ${DISCORD_LINK}.`,
     ],
     fr: [
       "UNDRGND2 est un serveur communautaire de Need for Speed: Underground 2, jouable directement dans le navigateur : exploration libre et courses en ligne avec des joueurs du monde entier.",
       `Le portage navigateur est l'œuvre de th0mk (${PORT}). Ce serveur le fait tourner et suit ses mises à jour ; tout le mérite lui revient.`,
-      'Ayants droit : undrgnd2.contact (at) gmail.com.',
+      `Courses, crews et entraide : rejoins-nous sur ${DISCORD_LINK}.`,
     ],
   };
 
