@@ -18,6 +18,8 @@
   };
 
   document.title = NAME;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#050b14');
+  document.querySelector('meta[name="application-name"]')?.setAttribute('content', NAME);
 
   function title() {
     const h1 = document.querySelector('.brand h1');
