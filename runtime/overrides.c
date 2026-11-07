@@ -322,14 +322,15 @@ void overrides_install(void){
     d3dx_hle_install();
 }
 
-static uint64_t g_jdlz_n, g_jdlz_bytes, g_jdlz_lifted, g_pm_hits, g_pm_calls, g_pm_clears;
+static uint64_t g_jdlz_n, g_jdlz_bytes, g_jdlz_lifted, g_jdlz_refused, g_pm_hits, g_pm_calls, g_pm_clears;
 void overrides_report(void){
     if (g_pm_calls)
         fprintf(stderr,"  NewGetCarPart: %llu of %llu answers kept from before (all forgotten %llu times)\n", (unsigned long long)g_pm_hits,
                 (unsigned long long)g_pm_calls, (unsigned long long)g_pm_clears);
-    if (g_jdlz_n || g_jdlz_lifted)
-        fprintf(stderr,"  JDLZ: %llu blocks unpacked natively (%.1f MB), %llu by the game's code\n",
-                (unsigned long long)g_jdlz_n, g_jdlz_bytes / 1048576.0, (unsigned long long)g_jdlz_lifted);
+    if (g_jdlz_n || g_jdlz_lifted || g_jdlz_refused)
+        fprintf(stderr,"  JDLZ: %llu blocks unpacked natively (%.1f MB), %llu by the game's code, %llu blocks refused\n",
+                (unsigned long long)g_jdlz_n, g_jdlz_bytes / 1048576.0, (unsigned long long)g_jdlz_lifted,
+                (unsigned long long)g_jdlz_refused);
     if (g_e2be0_calls)
         fprintf(stderr,"  sub_006e2be0: %llu calls, %llu NULL lists skipped\n",
                 (unsigned long long)g_e2be0_calls,(unsigned long long)g_null_list);
@@ -1642,7 +1643,30 @@ void sub_00639f20(CPU *c){
  * memory, which overlaps the output, or would read or write past the
  * output's ends goes to the game's code from the start (each byte it writes
  * again is the same).  The other kinds: the game's.  NFSU2_JDLZ_VERIFY=1
- * (test aid): each block unpacked both ways, compared ("[jdlz] DIFFERS"). */
+ * (test aid): each block unpacked both ways, compared ("[jdlz] DIFFERS").
+ * A block of one of the packs (VINYLPACKS, MODPACKS, LANGPACKS: fileio.c
+ * keeps where their bytes went) never goes to the game's code: one the native
+ * unpacker refuses is logged ("[packs]": the pack file, where in it) and
+ * left out, its output zeroed and 0 returned, as the game does for a kind it
+ * does not know; a texture block of zeros has a TextureInfo of none (hash 0,
+ * an empty place: 0x494C10 finds and makes nothing), so the texture is
+ * missing.  The output's size is the caller's: the streamer's (0x48D090) its
+ * entry's (esi, +0xC: it allocates that and its alignment), the FE packs' and
+ * the bundles' (0x51BC81, 0x577E46) the block's own (+8).  The game's own
+ * blocks keep the game's code where the native unpacker does not take them:
+ * all of its texture packs' 2623 JDLZ blocks and its 3 JDLZ bundles unpack
+ * natively by these rules (tools/packcheck.py's copy of them), so only a
+ * block in memory that overlaps its output or is not all there goes to it.
+ * The native unpacker takes a JDLZ block only when its output comes out
+ * whole (all of the game's do).
+ * Every unpacker writes the size the block says (+8: JDLZ, RAWW, HUFF), and
+ * only the FE packs and the bundles (and split screen's copy) allocate that;
+ * the streamer allocates its entry's.  So a block from the streamer that says
+ * more than its entry is refused before any unpacker sees it, the same way,
+ * a pack's or the game's (the game's never do: its texture packs' 58637
+ * blocks all say their entry's size).  And a pack's block of a kind or
+ * version the game's dispatcher unpacks nothing of (its output left as the
+ * memory had it) is refused the same way. */
 #define JDLZ_TAG        0x5a4c444au
 void sub_00574670_orig(CPU *c);
 static int range_committed(uint32_t a, uint32_t n){
@@ -1652,7 +1676,7 @@ static int range_committed(uint32_t a, uint32_t n){
         if (!((g_cbits[pg >> 3] >> (pg & 7)) & 1)) return 0;
     return 1;
 }
-/* 1: unpacked into out; 0: not done (out may hold some of it) */
+/* 1: unpacked into out, all of it; 0: not done (out may hold some of it) */
 static int jdlz_native(uint32_t blk, uint32_t out){
     uint32_t size = MR32(blk + 8u), csize = MR32(blk + 0xcu);
     if (csize < 0x12u || !range_committed(blk, csize) || !range_committed(out, size)) return 0;
@@ -1679,20 +1703,68 @@ static int jdlz_native(uint32_t blk, uint32_t out){
         if (f1 == 1u){ if (!left || s >= s_end) return 0; f1 = (uint32_t)*s++ | 0x100u; left--; }
         if (f2 == 1u){ if (!left || s >= s_end) return 0; f2 = (uint32_t)*s++ | 0x100u; left--; }
     }
+    return o == end;                                    /* (all of it written) */
+}
+int fileio_pack_bytes(uint32_t a, uint32_t n, const char **pk, int64_t *off);
+#define RET_STREAMER    0x0048d095u   /* the streamer's call (0x48D090) */
+#define RAWW_TAG        0x57574152u
+#define HUFF_TAG        0x46465548u
+#define COMP_TAG        0x504d4f43u
+/* the caller's output's size: the streamer's entry's (esi +0xC), else the block's own (+8) */
+static uint32_t out_room(CPU *c, uint32_t blk){
+    return MR32(c->esp) == RET_STREAMER && mem_is_committed(c->esi + 0xcu) ? MR32(c->esi + 0xcu) : MR32(blk + 8u);
+}
+/* the block left out: logged (why, the pack file and where in it, or the game's), the caller's output zeroed, 0
+ * returned to the caller */
+static void refuse(CPU *c, uint32_t blk, uint32_t out, int pack, const char *pk, int64_t off, const char *why){
+    uint32_t n = out_room(c, blk);
+    if (range_committed(out, n)) memset(&MR8(out), 0, n);
+    if (g_jdlz_refused++ < 16){
+        if (pack) fprintf(stderr, "[packs] %s: the block at %lld (%u bytes, %u unpacked) %s: left out, never given to the "
+                          "game's own unpacker (tools/packcheck.py says what is wrong)\n", pk ? pk : "?", (long long)off,
+                          MR32(blk + 0xcu), MR32(blk + 8u), why);
+        else fprintf(stderr, "[jdlz] f=%ld the game's block at 0x%08x (%u unpacked) %s: left out\n", autotest_frame(), blk,
+                     MR32(blk + 8u), why);
+    }
+    c->eax = 0; POP32(c->eip);
+}
+/* 1: blk is a pack's block (fileio.c's kept reads; one it cannot read again counts as a pack's), refused; 0: the game's */
+static int pack_refused(CPU *c, uint32_t blk, uint32_t out, const char *why){
+    const char *pk = 0; int64_t off = -1;
+    if (!fileio_pack_bytes(blk, 16u, &pk, &off)) return 0;
+    refuse(c, blk, out, 1, pk, off, why);
     return 1;
 }
 void sub_00574670(CPU *restrict c){
     static int verify = -1;
     if (verify < 0){ const char *e = getenv("NFSU2_JDLZ_VERIFY"); verify = e && *e == '1'; }
     uint32_t e = c->esp, blk = MR32(e + 4u), out = MR32(e + 8u);
+    /* the streamer's block that says it unpacks to more than its entry, which sized the output */
+    if (blk && out && MR32(e) == RET_STREAMER && mem_is_committed(blk) && mem_is_committed(blk + 15u) &&
+        mem_is_committed(c->esi + 0xcu) && (MR32(blk) == JDLZ_TAG || MR32(blk) == RAWW_TAG || MR32(blk) == HUFF_TAG) &&
+        MR32(blk + 8u) > MR32(c->esi + 0xcu)){
+        const char *pk = 0; int64_t off = -1;
+        int pack = fileio_pack_bytes(blk, 16u, &pk, &off) != 0;
+        refuse(c, blk, out, pack, pk, off, "says it unpacks to more than its entry");
+        return;
+    }
+    /* a pack's block of a kind or version the game's dispatcher leaves the output unwritten for (the packs' are JDLZ 2
+     * or RAWW 1; the game's are JDLZ 2 and HUFF) */
+    if (blk && out && mem_is_committed(blk) && mem_is_committed(blk + 15u)){
+        uint32_t tag = MR32(blk), ver = MR8(blk + 4u);
+        if (!((tag == JDLZ_TAG && ver == 2) || (tag == RAWW_TAG && ver == 1) || tag == HUFF_TAG || tag == COMP_TAG) &&
+            pack_refused(c, blk, out, "is of a kind or version the game unpacks nothing of")) return;
+    }
     if (blk && out && mem_is_committed(blk) && mem_is_committed(blk + 15u) && MR32(blk) == JDLZ_TAG && MR8(blk + 4u) == 2){
         uint32_t size = MR32(blk + 8u);
         if (!verify){
             if (jdlz_native(blk, out)){ g_jdlz_n++; g_jdlz_bytes += size; c->eax = size; POP32(c->eip); return; }
+            if (pack_refused(c, blk, out, "is JDLZ the native unpacker does not take")) return;
             g_jdlz_lifted++;
         } else if (range_committed(out, size)){
             uint8_t *mine = malloc(size ? size : 1);
             int done = mine && jdlz_native(blk, out);
+            if (!done && pack_refused(c, blk, out, "is JDLZ the native unpacker does not take")){ free(mine); return; }
             if (done) memcpy(mine, &MR8(out), size);
             sub_00574670_orig(c);
             if (done && memcmp(mine, &MR8(out), size)){
