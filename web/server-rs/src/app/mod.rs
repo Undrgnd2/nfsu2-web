@@ -10,6 +10,7 @@
 //! bare address.  The console is the operator's own: it may name paths, but it names players only by their virtual
 //! address and nickname, never by their real address (--access-log is the one opt-in that records client addresses).
 
+mod autoban;
 mod blocks;
 pub mod control;
 pub mod days;
@@ -614,6 +615,9 @@ impl App {
         }
         if p == "/country" {
             return self.send_country(q, s).await;
+        }
+        if p == "/lan" {
+            return self.send_lan_check(q, s).await;
         }
         if p == "/robots.txt" {
             return self.plain(q, s, 200, ROBOTS_TXT, &[], Cache::Revalidate, false).await;
