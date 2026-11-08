@@ -1435,6 +1435,7 @@
     "other": "{names} ve {n} tane daha"
   },
   "Sharp menus, HUD and maps.": "Keskin menüler, HUD ve haritalar.",
+  "Sharp vinyls and doorlines.": "Keskin viniller ve kapı çizgileri.",
   "The minimap and the world map redrawn at 2048x2048.": "Mini harita ve Dünya Haritası 2048x2048 olarak yeniden çizilmiş.",
   "Any screen shape without stretching.": "Her ekran oranı, görüntüyü germeden.",
   "2 to 4 players on one screen.": "Tek ekranda 2 ila 4 oyuncu.",
@@ -1444,9 +1445,10 @@
   "NFS Carbon's gearbox whine on your car.": "NFS Carbon'ın şanzıman uğultusu arabanda.",
   "Drift camera, high beam, EU cars and more.": "Drift kamerası, uzun far, Avrupa arabaları ve dahası.",
   "Dents, loose parts and scratches.": "Göçükler, gevşek parçalar ve çizikler.",
+  "Camber, offset and tire width for each car.": "Her araba için kamber, ofset ve lastik genişliği.",
   "New rim brands in the rim shop.": "Jant mağazasında yeni jant markaları.",
-  "Mod parts on other cars": "Diğer arabalardaki mod parçaları",
-  "Original: other players' cars with the game's own parts instead.": "Orijinal: diğer oyuncuların arabaları yerine oyunun kendi parçalarıyla.",
+  "Mods on other cars": "Diğer arabalardaki modlar",
+  "Original: other players' cars as the original game draws them.": "Orijinal: diğer oyuncuların arabaları orijinal oyunun çizdiği gibi.",
   "Shown": "Gösterilir",
   "The 33 hidden races on the map.": "33 gizli yarış haritada.",
   "DVD covers by stage, not by your car's parts.": "DVD kapakları arabanın parçalarına göre değil, aşamaya göre.",
@@ -1525,5 +1527,6 @@
   "Smoother edges?": "Daha pürüzsüz kenarlar?",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "Kenar yumuşatma tırtıklı kenarları düzeltir. Daha yavaş bir bilgisayarda kare hızını düşürebilir. İstediğin zaman oyunun Görüntü seçeneklerinden değiştirebilirsin.",
   "Keep off": "Kapalı kalsın",
-  "Drag to compare": "Karşılaştırmak için sürükle"
+  "Drag to compare": "Karşılaştırmak için sürükle",
+  "{n} fixes": "{n} düzeltme"
 }

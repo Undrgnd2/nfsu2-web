@@ -1510,6 +1510,7 @@
     "other": "{names} och {n} till"
   },
   "Sharp menus, HUD and maps.": "Skarpa menyer, HUD och kartor.",
+  "Sharp vinyls and doorlines.": "Skarpa vinyler och dörrlinjer.",
   "The minimap and the world map redrawn at 2048x2048.": "Minikartan och världskartan omritade i 2048x2048.",
   "Any screen shape without stretching.": "Alla skärmformat, utan att bilden sträcks ut.",
   "2 to 4 players on one screen.": "2 till 4 spelare på en skärm.",
@@ -1519,9 +1520,10 @@
   "NFS Carbon's gearbox whine on your car.": "NFS Carbons växellådsvin på din bil.",
   "Drift camera, high beam, EU cars and more.": "Driftkamera, helljus, de europeiska bilarna och mer.",
   "Dents, loose parts and scratches.": "Bucklor, lösa delar och repor.",
+  "Camber, offset and tire width for each car.": "Camber, spårvidd och däckbredd för varje bil.",
   "New rim brands in the rim shop.": "Nya fälgmärken i fälgbutiken.",
-  "Mod parts on other cars": "Moddelar på andras bilar",
-  "Original: other players' cars with the game's own parts instead.": "Original: andra spelares bilar med spelets egna delar i stället.",
+  "Mods on other cars": "Moddar på andras bilar",
+  "Original: other players' cars as the original game draws them.": "Original: andra spelares bilar som originalspelet ritar dem.",
   "Shown": "Visas",
   "The 33 hidden races on the map.": "De 33 dolda racen på kartan.",
   "DVD covers by stage, not by your car's parts.": "DVD-omslag efter nivå, inte efter bilens delar.",
@@ -1600,5 +1602,9 @@
   "Smoother edges?": "Mjukare kanter?",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "Kantutjämning jämnar ut taggiga kanter. På en långsammare dator kan den sänka bildfrekvensen. Du kan ändra det när som helst i spelets Bildskärm-inställningar.",
   "Keep off": "Låt vara av",
-  "Drag to compare": "Dra för att jämföra"
+  "Drag to compare": "Dra för att jämföra",
+  "{n} fixes": {
+    "one": "{n} felrättning",
+    "other": "{n} felrättningar"
+  }
 }

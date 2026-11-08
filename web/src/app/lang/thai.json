@@ -1423,6 +1423,7 @@
   "With it off: as in the original game": "เมื่อปิด: เหมือนเกมต้นฉบับ",
   "{names} and {n} more": "{names} และอีก {n} รายการ",
   "Sharp menus, HUD and maps.": "เมนู HUD และแผนที่คมชัด",
+  "Sharp vinyls and doorlines.": "ลายรถและเส้นประตูคมชัด",
   "The minimap and the world map redrawn at 2048x2048.": "มินิแมปและแผนที่โลกที่วาดใหม่ที่ 2048x2048",
   "Any screen shape without stretching.": "จอทุกสัดส่วนโดยไม่ยืดภาพ",
   "2 to 4 players on one screen.": "ผู้เล่น 2 ถึง 4 คนบนจอเดียว",
@@ -1432,9 +1433,10 @@
   "NFS Carbon's gearbox whine on your car.": "เสียงหอนของเกียร์จาก NFS Carbon บนรถของคุณ",
   "Drift camera, high beam, EU cars and more.": "กล้องดริฟต์ ไฟสูง รถรุ่นยุโรป และอื่นๆ",
   "Dents, loose parts and scratches.": "รอยบุบ ชิ้นส่วนที่หลุดหลวม และรอยขีดข่วน",
+  "Camber, offset and tire width for each car.": "แคมเบอร์ ระยะล้อ และความกว้างยางของรถแต่ละคัน",
   "New rim brands in the rim shop.": "แบรนด์ล้อใหม่ในร้านล้อ",
-  "Mod parts on other cars": "ชิ้นส่วนม็อดบนรถคันอื่น",
-  "Original: other players' cars with the game's own parts instead.": "ต้นฉบับ: รถของผู้เล่นอื่นใช้ชิ้นส่วนของเกมเองแทน",
+  "Mods on other cars": "ม็อดบนรถคันอื่น",
+  "Original: other players' cars as the original game draws them.": "ต้นฉบับ: รถของผู้เล่นอื่นแสดงแบบเดียวกับในเกมต้นฉบับ",
   "Shown": "แสดง",
   "The 33 hidden races on the map.": "การแข่งลับ 33 รายการบนแผนที่",
   "DVD covers by stage, not by your car's parts.": "ปก DVD ตามด่าน ไม่ใช่ตามชิ้นส่วนของรถ",
@@ -1513,5 +1515,6 @@
   "Smoother edges?": "ขอบเรียบขึ้นไหม",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "แอนตี้เอเลียสซิ่งช่วยให้ขอบที่เป็นหยักดูเรียบขึ้น บนคอมพิวเตอร์ที่ช้ากว่าอาจทำให้เฟรมเรตลดลง เปลี่ยนได้ทุกเมื่อในตัวเลือกการแสดงผลของเกม",
   "Keep off": "ปิดไว้เหมือนเดิม",
-  "Drag to compare": "ลากเพื่อเปรียบเทียบ"
+  "Drag to compare": "ลากเพื่อเปรียบเทียบ",
+  "{n} fixes": "แก้ไข {n} รายการ"
 }

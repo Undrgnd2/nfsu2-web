@@ -1449,6 +1449,7 @@
     "other": "{names} και {n} ακόμα"
   },
   "Sharp menus, HUD and maps.": "Ευκρινή μενού, ενδείξεις και χάρτες.",
+  "Sharp vinyls and doorlines.": "Ευκρινή βινύλια και αρμοί πορτών.",
   "The minimap and the world map redrawn at 2048x2048.": "Ο μίνι χάρτης και ο χάρτης πόλης ξανασχεδιασμένοι σε 2048x2048.",
   "Any screen shape without stretching.": "Οποιοδήποτε σχήμα οθόνης χωρίς τέντωμα.",
   "2 to 4 players on one screen.": "2 έως 4 παίκτες σε μία οθόνη.",
@@ -1458,9 +1459,10 @@
   "NFS Carbon's gearbox whine on your car.": "Το σφύριγμα κιβωτίου του NFS Carbon στο αυτοκίνητό σου.",
   "Drift camera, high beam, EU cars and more.": "Κάμερα ντριφτ, μεγάλη σκάλα, ευρωπαϊκά αυτοκίνητα και άλλα.",
   "Dents, loose parts and scratches.": "Βαθουλώματα, χαλαρά εξαρτήματα και γρατζουνιές.",
+  "Camber, offset and tire width for each car.": "Κάμπερ, μετατόπιση τροχών και πλάτος ελαστικών για κάθε αυτοκίνητο.",
   "New rim brands in the rim shop.": "Νέες μάρκες ζαντών στο κατάστημα ζαντών.",
-  "Mod parts on other cars": "Εξαρτήματα mod σε άλλα αυτοκίνητα",
-  "Original: other players' cars with the game's own parts instead.": "Αρχική συμπεριφορά: τα αυτοκίνητα των άλλων παικτών με τα εξαρτήματα του ίδιου του παιχνιδιού.",
+  "Mods on other cars": "Mods σε άλλα αυτοκίνητα",
+  "Original: other players' cars as the original game draws them.": "Αρχική συμπεριφορά: τα αυτοκίνητα των άλλων παικτών όπως τα δείχνει το αρχικό παιχνίδι.",
   "Shown": "Εμφανίζονται",
   "The 33 hidden races on the map.": "Οι 33 κρυφοί αγώνες στον χάρτη.",
   "DVD covers by stage, not by your car's parts.": "Εξώφυλλα DVD ανά στάδιο, όχι ανάλογα με τα εξαρτήματα του αυτοκινήτου σου.",
@@ -1540,5 +1542,9 @@
   "Smoother edges?": "Πιο ομαλές άκρες;",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "Η εξομάλυνση λειαίνει τις οδοντωτές άκρες. Σε πιο αργό υπολογιστή μπορεί να μειώσει τον ρυθμό καρέ. Μπορείς να την αλλάξεις όποτε θέλεις στις επιλογές «Εικόνα» του παιχνιδιού.",
   "Keep off": "Να μείνει ανενεργή",
-  "Drag to compare": "Σύρε για σύγκριση"
+  "Drag to compare": "Σύρε για σύγκριση",
+  "{n} fixes": {
+    "one": "{n} διόρθωση",
+    "other": "{n} διορθώσεις"
+  }
 }

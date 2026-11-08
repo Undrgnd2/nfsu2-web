@@ -1567,6 +1567,7 @@
     "other": "{names} a {n} ďalších"
   },
   "Sharp menus, HUD and maps.": "Ostré ponuky, HUD a mapy.",
+  "Sharp vinyls and doorlines.": "Ostré vinyly a línie dverí.",
   "The minimap and the world map redrawn at 2048x2048.": "Minimapa a mapa sveta prekreslené v 2048x2048.",
   "Any screen shape without stretching.": "Akýkoľvek pomer strán bez rozťahovania.",
   "2 to 4 players on one screen.": "2 až 4 hráči na jednej obrazovke.",
@@ -1576,9 +1577,10 @@
   "NFS Carbon's gearbox whine on your car.": "Kvílenie prevodovky z NFS Carbon na tvojom aute.",
   "Drift camera, high beam, EU cars and more.": "Driftová kamera, diaľkové svetlá, európske autá a ďalšie.",
   "Dents, loose parts and scratches.": "Preliačiny, uvoľnené diely a škrabance.",
+  "Camber, offset and tire width for each car.": "Odklon, rozchod a šírka pneumatík pre každé auto.",
   "New rim brands in the rim shop.": "Nové značky diskov v obchode s diskami.",
-  "Mod parts on other cars": "Diely z modov na cudzích autách",
-  "Original: other players' cars with the game's own parts instead.": "Originál: autá ostatných hráčov namiesto nich s dielmi z hry.",
+  "Mods on other cars": "Mody na cudzích autách",
+  "Original: other players' cars as the original game draws them.": "Originál: autá ostatných hráčov tak, ako ich kreslí pôvodná hra.",
   "Shown": "Zobrazené",
   "The 33 hidden races on the map.": "33 skrytých závodov na mape.",
   "DVD covers by stage, not by your car's parts.": "Obálky DVD podľa etapy, nie podľa dielov tvojho auta.",
@@ -1658,5 +1660,11 @@
   "Smoother edges?": "Hladšie hrany?",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "Vyhladzovanie hrán odstráni zubaté okraje. Na pomalšom počítači môže znížiť počet snímok za sekundu. Zmeniť ho môžeš kedykoľvek v hre v možnostiach Obrazovka.",
   "Keep off": "Nechať vypnuté",
-  "Drag to compare": "Potiahni a porovnaj"
+  "Drag to compare": "Potiahni a porovnaj",
+  "{n} fixes": {
+    "one": "{n} oprava",
+    "few": "{n} opravy",
+    "many": "{n} opravy",
+    "other": "{n} opráv"
+  }
 }

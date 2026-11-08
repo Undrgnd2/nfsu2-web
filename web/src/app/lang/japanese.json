@@ -1423,6 +1423,7 @@
   "With it off: as in the original game": "オフ: オリジナルのゲームと同じ",
   "{names} and {n} more": "{names}、ほか{n}件",
   "Sharp menus, HUD and maps.": "くっきりしたメニュー、HUD、マップ。",
+  "Sharp vinyls and doorlines.": "くっきりしたバイナルとドアライン。",
   "The minimap and the world map redrawn at 2048x2048.": "ミニマップとワールドマップを2048x2048で描き直したもの。",
   "Any screen shape without stretching.": "どんな画面比率でも引き伸ばしなし。",
   "2 to 4 players on one screen.": "1つの画面で2～4人プレイ。",
@@ -1432,9 +1433,10 @@
   "NFS Carbon's gearbox whine on your car.": "NFS Carbon のギアボックスの唸りをあなたの車に。",
   "Drift camera, high beam, EU cars and more.": "ドリフトカメラ、ハイビーム、ヨーロッパ版の車など。",
   "Dents, loose parts and scratches.": "へこみ、外れかけたパーツ、すり傷。",
+  "Camber, offset and tire width for each car.": "車ごとのキャンバー、オフセット、タイヤ幅。",
   "New rim brands in the rim shop.": "ホイールショップに新しいホイールブランド。",
-  "Mod parts on other cars": "他の車のMODパーツ",
-  "Original: other players' cars with the game's own parts instead.": "オリジナル：他プレイヤーの車をゲーム本来のパーツで表示します。",
+  "Mods on other cars": "他の車のMOD",
+  "Original: other players' cars as the original game draws them.": "オリジナル：他プレイヤーの車をオリジナルのゲームどおりに表示します。",
   "Shown": "表示",
   "The 33 hidden races on the map.": "隠しレース33件をマップに表示。",
   "DVD covers by stage, not by your car's parts.": "DVDカバーは、車のパーツではなくステージで決まります。",
@@ -1513,5 +1515,6 @@
   "Smoother edges?": "輪郭をなめらかにしますか？",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "アンチエイリアスはギザギザの輪郭をなめらかにします。遅いパソコンではフレームレートが下がることがあります。ゲームの「画面」オプションでいつでも変更できます。",
   "Keep off": "オフのままにする",
-  "Drag to compare": "ドラッグして比較"
+  "Drag to compare": "ドラッグして比較",
+  "{n} fixes": "{n}件の修正"
 }

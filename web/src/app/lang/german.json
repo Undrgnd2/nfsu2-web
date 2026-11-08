@@ -1510,6 +1510,7 @@
     "other": "{names} und {n} weitere"
   },
   "Sharp menus, HUD and maps.": "Scharfe Menüs, HUD und Karten.",
+  "Sharp vinyls and doorlines.": "Scharfe Vinyls und Türfugen.",
   "The minimap and the world map redrawn at 2048x2048.": "Minikarte und Weltkarte neu gezeichnet in 2048x2048.",
   "Any screen shape without stretching.": "Jedes Bildschirmformat ohne Strecken.",
   "2 to 4 players on one screen.": "2 bis 4 Spieler an einem Bildschirm.",
@@ -1519,9 +1520,10 @@
   "NFS Carbon's gearbox whine on your car.": "Das Getriebeheulen aus NFS Carbon an deinem Wagen.",
   "Drift camera, high beam, EU cars and more.": "Drift-Kamera, Fernlicht, europäische Wagen und mehr.",
   "Dents, loose parts and scratches.": "Beulen, lose Teile und Kratzer.",
+  "Camber, offset and tire width for each car.": "Sturz, Spurweite und Reifenbreite für jeden Wagen.",
   "New rim brands in the rim shop.": "Neue Felgenmarken im Felgenshop.",
-  "Mod parts on other cars": "Mod-Teile an anderen Wagen",
-  "Original: other players' cars with the game's own parts instead.": "Original: die Wagen anderer Spieler stattdessen mit den Teilen des Spiels.",
+  "Mods on other cars": "Mods an anderen Wagen",
+  "Original: other players' cars as the original game draws them.": "Original: die Wagen anderer Spieler so, wie das Originalspiel sie zeichnet.",
   "Shown": "Angezeigt",
   "The 33 hidden races on the map.": "Die 33 versteckten Rennen auf der Karte.",
   "DVD covers by stage, not by your car's parts.": "DVD-Cover nach Stufe, nicht nach den Teilen deines Wagens.",
@@ -1600,5 +1602,9 @@
   "Smoother edges?": "Glattere Kanten?",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "Kantenglättung glättet gezackte Kanten. Auf einem langsameren Computer kann sie die Bildrate senken. Du kannst sie jederzeit in den Anzeige-Optionen des Spiels ändern.",
   "Keep off": "Aus lassen",
-  "Drag to compare": "Zum Vergleichen ziehen"
+  "Drag to compare": "Zum Vergleichen ziehen",
+  "{n} fixes": {
+    "one": "{n} Fehlerbehebung",
+    "other": "{n} Fehlerbehebungen"
+  }
 }

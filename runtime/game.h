@@ -46,13 +46,26 @@
 #define G_PROFILE_NAME  0x0083a9e0u   /* player 1's profile (FEDatabase +0x10): +0 its name (32 bytes), +0x20 1: one is loaded */
 #define G_VOLUMES       0x0083aa28u   /* the Audio options' volumes (floats 0 .. 1): +0 Master, +0x10 Sound Effects, +0x14 Engine */
 #define G_QR_CAR        0x0083aab8u   /* each player's car handle in Quick Race, LAN, Online (+4 player 2) */
+#define G_FE_RIDE       0x008392c0u   /* the front end's ride of the car: +0 car type, +0x590 + 4 x slot its parts */
+#define G_FECARS_SZ     0xab4cu       /* a player's front-end cars: player 2's G_FECARS + this (garage.c CARS_SZ) */
 #define G_FECARS        0x0083ad90u   /* player 1's front-end cars (FEDatabase +0x3C0): +0x9BD8 0x5B record pointers,
                                        * a record's +8 its handle */
 
 /* ---- cars ---------------------------------------------------------------- */
 #define G_CARTYPES      0x008a1cccu   /* CarTypeInfo[] (0x890 bytes each): +0 the name, +0x20 the name its textures go by,
                                        * +0xC0 the make, +0xD0 the name's hash */
+#define CARTYPE_SIZE    0x890u        /* a CarTypeInfo's size */
+#define CARTYPE_TEXNAME 0x20u         /* ... the name its textures go by ("350Z": CARS/350Z/, 350Z_<texture>) */
 #define G_CARPARTDB     0x008a2b68u   /* the car part database */
+
+/* ---- textures ------------------------------------------------------------ */
+/* a TextureInfo: +0 its platform record (+0x18 the port's D3D texture object, com.c: +28 its GPU texture id) */
+#define TI_PLAT         0x00u
+#define TI_HASH         0x24u         /* its name's hash (bStringHash) */
+#define TI_WIDTH        0x44u         /* u16 */
+#define TI_HEIGHT       0x46u         /* u16 */
+#define PLAT_D3DTEX     0x18u
+#define D3DTEX_ID       28u
 /* a car (the World's list, [player + 4]) */
 #define CAR_FWD_SPEED   0x42cu        /* float: its speed, m/s forward */
 #define CAR_SPEED       0x430u        /* float: its speed, m/s, as the engine sound takes it */
@@ -66,6 +79,7 @@
 #define FN_PKG_FIND     0x00517f80u   /* thiscall package (hash) -> its object, 0: none */
 #define FN_FE_SETSTR    0x00535fe0u   /* thiscall string object (char*): its text */
 #define FN_FE_HIDE      0x0050ca00u   /* cdecl (FE object, 0: none) */
+#define FN_FE_SHOW      0x0050ca50u   /* cdecl (FE object, 0: none): shown again */
 #define FN_ITEM         0x0051f670u   /* thiscall (icon, label, 0; ret 0xC): a menu item's constructor */
 #define FN_RIDE_INIT    0x00610270u   /* thiscall ride (car type, 0 or 1, 0, 0) */
 #define FN_RIDE_SKINS   0x0061c280u   /* thiscall ride (n): DUMMY_SKIN<n>, WHEEL, SPINNER */

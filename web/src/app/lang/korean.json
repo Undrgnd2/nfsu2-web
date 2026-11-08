@@ -1423,6 +1423,7 @@
   "With it off: as in the original game": "꺼짐: 원작 게임처럼",
   "{names} and {n} more": "{names} 외 {n}개",
   "Sharp menus, HUD and maps.": "선명한 메뉴, HUD, 지도.",
+  "Sharp vinyls and doorlines.": "선명한 비닐과 도어 라인.",
   "The minimap and the world map redrawn at 2048x2048.": "2048x2048로 다시 그린 미니맵과 월드맵.",
   "Any screen shape without stretching.": "어떤 화면 비율이든 늘어나지 않아요.",
   "2 to 4 players on one screen.": "한 화면에서 2~4명이 플레이.",
@@ -1432,9 +1433,10 @@
   "NFS Carbon's gearbox whine on your car.": "내 차에 NFS Carbon의 기어박스 휭 소리.",
   "Drift camera, high beam, EU cars and more.": "드리프트 카메라, 상향등, 유럽판 차량 등.",
   "Dents, loose parts and scratches.": "찌그러짐, 떨어지는 부품, 긁힘.",
+  "Camber, offset and tire width for each car.": "차마다 캠버, 오프셋, 타이어 폭.",
   "New rim brands in the rim shop.": "휠 상점에 새 휠 브랜드.",
-  "Mod parts on other cars": "다른 차의 모드 부품",
-  "Original: other players' cars with the game's own parts instead.": "원본: 다른 플레이어의 차를 게임 자체 부품으로 표시합니다.",
+  "Mods on other cars": "다른 차의 모드",
+  "Original: other players' cars as the original game draws them.": "원본: 다른 플레이어의 차를 원작 게임 그대로 표시합니다.",
   "Shown": "표시",
   "The 33 hidden races on the map.": "숨겨진 레이스 33개를 지도에 표시.",
   "DVD covers by stage, not by your car's parts.": "DVD 커버가 차의 파츠가 아니라 단계에 따라 정해져요.",
@@ -1513,5 +1515,6 @@
   "Smoother edges?": "가장자리를 더 매끄럽게 할까요?",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "안티에일리어싱은 들쭉날쭉한 가장자리를 매끄럽게 해 줘요. 느린 컴퓨터에서는 프레임 레이트가 떨어질 수 있어요. 게임의 디스플레이 옵션에서 언제든 바꿀 수 있어요.",
   "Keep off": "끈 채로 두기",
-  "Drag to compare": "드래그해서 비교"
+  "Drag to compare": "드래그해서 비교",
+  "{n} fixes": "수정 {n}건"
 }

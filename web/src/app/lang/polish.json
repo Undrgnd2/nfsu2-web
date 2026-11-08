@@ -1568,6 +1568,7 @@
     "other": "{names} i jeszcze {n}"
   },
   "Sharp menus, HUD and maps.": "Ostre menu, HUD i mapy.",
+  "Sharp vinyls and doorlines.": "Ostre winyle i linie drzwi.",
   "The minimap and the world map redrawn at 2048x2048.": "Minimapa i mapa miasta narysowane od nowa w 2048x2048.",
   "Any screen shape without stretching.": "Dowolny kształt ekranu bez rozciągania.",
   "2 to 4 players on one screen.": "2–4 graczy na jednym ekranie.",
@@ -1577,9 +1578,10 @@
   "NFS Carbon's gearbox whine on your car.": "Wycie skrzyni biegów z NFS Carbon w twoim aucie.",
   "Drift camera, high beam, EU cars and more.": "Kamera driftu, długie światła, europejskie auta i więcej.",
   "Dents, loose parts and scratches.": "Wgniecenia, luźne części i rysy.",
+  "Camber, offset and tire width for each car.": "Pochylenie kół, rozstaw i szerokość opon dla każdego auta.",
   "New rim brands in the rim shop.": "Nowe marki felg w sklepie z felgami.",
-  "Mod parts on other cars": "Części z modów na innych autach",
-  "Original: other players' cars with the game's own parts instead.": "Oryginał: auta innych graczy z częściami z gry w zamian.",
+  "Mods on other cars": "Mody na innych autach",
+  "Original: other players' cars as the original game draws them.": "Oryginał: auta innych graczy tak, jak rysuje je oryginalna gra.",
   "Shown": "Widoczne",
   "The 33 hidden races on the map.": "33 ukryte wyścigi na mapie.",
   "DVD covers by stage, not by your car's parts.": "Okładki DVD zależą od etapu, a nie od części twojego auta.",
@@ -1658,5 +1660,11 @@
   "Smoother edges?": "Gładsze krawędzie?",
   "Anti-aliasing smooths jagged edges. On a slower computer it can lower the frame rate. Change it any time in the game's Display options.": "Wygładzanie krawędzi usuwa postrzępione brzegi. Na wolniejszym komputerze może obniżyć liczbę klatek. Możesz to zmienić w każdej chwili w opcjach Ekran w grze.",
   "Keep off": "Zostaw wyłączone",
-  "Drag to compare": "Przeciągnij, aby porównać"
+  "Drag to compare": "Przeciągnij, aby porównać",
+  "{n} fixes": {
+    "one": "{n} poprawka",
+    "few": "{n} poprawki",
+    "many": "{n} poprawek",
+    "other": "{n} poprawki"
+  }
 }
