@@ -14,7 +14,7 @@
 // noted and ignored, so a typo never silently selects something else.
 //
 // This module is pure (no DOM, no OPFS) so it can be checked under node.
-import { blockedName } from './names.mjs';
+import { blockedName, blockedPlate } from './names.mjs';
 import { onlineName } from './claim';
 import { crewsOk, rgbsOk } from './crews';
 import { groupsOk, phrasesOk } from './phrases';
@@ -223,6 +223,12 @@ export const KEYS: readonly KeyDef[] = [
   // the game's own textures without smoothing (only the page's renderer reads it: subsystems.ts, gpu/encoder.ts
   // pointTex).  Not in bundle.m's table
   { key: 'pixelated_textures', env: 'NFSU2_PIXELATED_TEXTURES', kind: 'bool', scope: 'web' },
+  // the game's Full Scene Anti-Aliasing offered, at 4 samples (runtime/com.c MULTISAMPLING; phones off: device.ts).  Not
+  // in bundle.m's table: the Mac's MSAA is msaa's
+  { key: 'fsaa', env: 'NFSU2_FSAA', kind: 'bool', scope: 'web', device: true },
+  // anisotropic filtering where the game asks for it (only the page's renderer reads it: subsystems.ts, gpu/encoder.ts
+  // aniso; phones and tablets off: device.ts).  Not in bundle.m's table: the Mac's is texture_filtering
+  { key: 'anisotropic', env: 'NFSU2_ANISOTROPIC', kind: 'bool', scope: 'web', device: true },
   // free roam's world map: the other players marked at most (runtime/roam_game.c map_update; phones 2048: device.ts).
   // Not in bundle.m's table: the Mac's free roam has no hub
   { key: 'roam_map_max', env: 'NFSU2_ROAM_MAP_MAX', kind: 'int', vals: '0..4096', ic: true, scope: 'web', device: true },
@@ -460,6 +466,15 @@ export const TEMPLATE = `# NFSU2 settings, read at every launch.
 # Textures without smoothing (point sampling), blocky like early PC games;
 # on overrides the game's Texture Filtering.  [NFSU2_PIXELATED_TEXTURES]
 #pixelated_textures = off
+# The game's own Full Scene Anti-Aliasing (Options > Display > Customize
+# Display Settings), drawn at 4 samples: smoother edges for more of the
+# graphics' work; a new player on a computer starts with it on.  off = not
+# offered (the option stays greyed out).  Phones: off.  [NFSU2_FSAA]
+#fsaa = on
+# Sharper textures in the distance (roads, their lines, building fronts):
+# anisotropic filtering where the game asks for it, which the original
+# game never got.  Phones and tablets: off.  [NFSU2_ANISOTROPIC]
+#anisotropic = on
 
 # ---- Frame rate ----------------------------------------------------------
 
@@ -941,7 +956,7 @@ export function checkSetting(key: string, val: string): Checked | Refused | null
     case 'plate':
       out = plateUpper(val);
       if (!plateValid(out)) return refuse(N('"{value}" is not a license plate (letters A to Z and digits, at most 8)'), val);
-      if (blockedName(out)) return refuse(N('"{value}" is not a license plate (it reads as a slur)'), val);
+      if (blockedPlate(out)) return refuse(N('"{value}" is not a license plate (it reads as a slur)'), val);
       break;
     case 'room':
       if (!valueOk('text', val)) return refuse(N('"{value}" is not {kind}'), val, { kind: KIND_TEXT.text! });

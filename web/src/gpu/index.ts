@@ -72,6 +72,11 @@ export interface RendererOptions {
   /** tests: an autotest dump labelled <name>_px also writes its frame drawn with pixelated textures, <name>_px1 (the
    *  same moment in both looks) */
   pixelatedDump?: boolean;
+  /** anisotropic filtering where the game asks for it (Encoder.aniso) */
+  aniso?: boolean;
+  /** tests: an autotest dump labelled <name>_af also writes its frame drawn again with anisotropic filtering the other
+   *  way (Encoder.aniso), <name>_af1: the same moment both ways */
+  anisoDump?: boolean;
   /** diagnostics: a slower GPU, from a pass of this many iterations of busy work for each pixel
    *  of a 512x512 target in every frame (tests frame pacing on GPUs slower than this one) */
   gpuBurn?: number;
@@ -97,6 +102,9 @@ export interface RendererStats {
   /** draws dropped or changed: target texture missing, sampled texture = current target (drawn white),
    *  Z surface size differs from the target (Z off), vertex shader module missing */
   missingTarget: number; conflicts: number; zMismatch: number; noVs: number;
+  /** the game's Full Scene Anti-Aliasing (runtime/com.c MULTISAMPLING), once a frame had it: passes drawn at 4 samples,
+   *  and pictures drawn into a 4-sample twin again after a blit or copy into its target */
+  msPasses?: number; msRefreshes?: number;
   /** frames drawn straight into the canvas texture (no composite), and frames that kept the
    *  back buffer because they copied from the screen before drawing to it */
   direct: number; screenReadFirst: number;
@@ -257,6 +265,8 @@ export async function attachRenderer(proc: GameProcess, canvas: HTMLCanvasElemen
   enc.logShaders = !!opts.logShaders;
   enc.pointTex = !!opts.pixelated;
   if (enc.pointTex) log('[gpu] pixelated textures');
+  enc.aniso = !!opts.aniso;
+  if (enc.aniso) log('[gpu] anisotropic filtering where the game asks for it');
   for (const id of opts.watchTex ?? []) enc.watchTex.add(id);
   if (opts.trace === 'dumps') enc.traceDumps = true; else for (const f of opts.trace ?? []) enc.traceSeq.add(f);
   // pipelines of earlier sessions, created asynchronously as their shaders arrive
@@ -663,6 +673,15 @@ export async function attachRenderer(proc: GameProcess, canvas: HTMLCanvasElemen
       enc.afterSubmit();
       enc.pointTex = false;
     }
+    if (opts.anisoDump && lab?.endsWith('_af')) {
+      enc.aniso = !enc.aniso;
+      const ce2 = device.createCommandEncoder();
+      enc.encodeFrame(b, ce2, undefined);
+      reads.push({ name: `${dumpName}1`, rb: copyOut(ce2, enc.screen!) });
+      device.queue.submit([ce2.finish()]);
+      enc.afterSubmit();
+      enc.aniso = !enc.aniso;
+    }
     if (rbId) readForGame(rbId, rbRead, U[fw + F.rbDst], U[fw + F.rbPitch], U[fw + F.rbRows]);
     // quick chat's places over the cars in this very frame (GwMarks in its constants, from a module that writes them)
     if (opts.onMarks) {
@@ -899,6 +918,7 @@ export async function attachRenderer(proc: GameProcess, canvas: HTMLCanvasElemen
       pipelineMs: enc.pipeMs, pipelineMsMax: enc.pipeMsMax, gpuMsAvg: gpuMsN ? gpuMsTotal / gpuMsN : 0, gpuMsMax,
       encodeMsAvg: frames ? encMsTotal / frames : 0, encodeMsLast: encMsLast, drawsLast, passesLast, rafHz, inFlight,
       dumps: u32()[cw + C.dumpsDone], missingTarget: enc.missingTarget, conflicts: enc.conflicts, zMismatch: enc.zMismatch, noVs: enc.noVs,
+      ...(enc.msPasses ? { msPasses: enc.msPasses, msRefreshes: enc.msRefreshes } : {}),
       direct: directFrames, screenReadFirst: enc.screenReadFirst, slotWaits, slotWaitMsMax, pokes, unshown,
       texBytes: enc.texBytes, unpackBytes: enc.unpackBytes, astcBytes: enc.astcBytes }),
     window: (reset = false) => {
