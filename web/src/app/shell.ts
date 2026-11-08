@@ -39,10 +39,11 @@ import { DriftPanel } from './drift';
 import { PhotoMode, photoMark } from './photo';
 import type { PadPage } from '../input/gamepad';
 import type { NetBanCase, NetQueue, NetRaces, NetRemoved, NetRename } from '../net';
-import { blockList, changedSettings, checkSetting, HOST_FIXED, pageOnly, resolveEnv, settingsUpgrade, TEMPLATE, uiPack, type Resolved } from './settings';
+import { blockList, changedSettings, checkSetting, HOST_FIXED, pageOnly, putKey, resolveEnv, TEMPLATE, uiPack, type Resolved } from './settings';
+import { SettingsFile } from './settings-store';
 import { checkSaves, exists, filesOf, listProfiles, NO_SAVE, PROFILES_DIR, readText, removeSaveDir, SavesOff, setWritesOff, settleStaged, UNREADABLE, writeFile, type SavesCheck } from './savefs';
 import { coverOf, newProfileName, turnOnAutosave } from './profile';
-import { crewControl, putKey, SettingsPanel, showCrewCounts } from './settings-ui';
+import { crewControl, SettingsPanel, showCrewCounts } from './settings-ui';
 import { askCrews, askWorlds, countText, PlayersPanel, queueText, roomHash, roomText, serverAnswers, watchPlayers, type PlayerCounts, type Reach } from './players';
 import { isMain, isOwn, noGhost, WORLDS, worldName, worldNamed, worldRooms } from './worlds';
 import { panelTabs, refitTabs, type PanelTabs } from './tabs';
@@ -82,6 +83,7 @@ import type { Packs } from '../host/datacache';
 import type { GameMemory } from '../host/memory';
 import { texSplit } from '../gpu/index';
 import { copyText, copyToast } from './copy';
+import { OTHER_BUILD, PAGE_TAB, sessionStore, UPDATE_FOR } from './prefs';
 
 type Phase = 'boot' | 'ready' | 'error' | 'waiting' | 'starting' | 'playing' | 'exited';
 
@@ -148,7 +150,7 @@ let lastGame: LastGame | null = null;    // the last game's copy, when that game
 let hiddenAt = 0;                        // when the page was hidden during a game (0: shown)
 const checks = new Map<string, Check>();
 let instance: ReturnType<typeof claimInstance>;
-let settingsText: string | null = null;
+const settingsFile = new SettingsFile(() => SAVE, s => log.add(s));
 let starting = false;                    // Play pressed, the session not there yet
 let savesLocked = false;                 // the game about to start reads the saves: no cloud version comes in (VaultPanel's playing)
 let fatal: { what: string; code?: string } | null = null;   // why the running game had to be stopped (English, for t())
@@ -296,30 +298,18 @@ function updatePlay() {
 }
 
 // ------------------------------------------------------------- settings --
-/** settings.ini read (the template written where there is none); throws where it did not read, and then writes nothing
- *  (savefs.ts missing: Firefox's "UnknownError" was taken for no file, and the template went over the player's) */
+/** settings.ini read for the game (SettingsFile.load: the template written where there is none); throws where it did
+ *  not read, and then writes nothing */
 async function loadSettings(): Promise<string | null> {
-  let text = await readText(SAVE, 'settings.ini');
-  if (text === null && instance.owner) {
-    text = TEMPLATE;
-    await writeFile(SAVE, 'settings.ini', text);
-    log.add(`[app] settings: wrote template /save/settings.ini`);
-  } else if (text !== null && instance.owner) {
-    const up = settingsUpgrade(text);
-    if (up) { text = up.text; await writeFile(SAVE, 'settings.ini', text); log.add(`[app] settings: added the new options ${up.added.join(', ')} to /save/settings.ini (commented out, defaults unchanged)`); }
-  }
-  settingsText = text;
+  const text = await settingsFile.load(instance.owner);
   // who plays on this server, asked again with this file's room and crews (the first question went without them)
   players?.now();
   return text;
 }
-/** settings.ini changed by edit, on top of the file as it is now (the template where there is none), and kept as the
- *  page's copy: never on top of the page's copy alone, which is null where the file did not read.  Throws where it did not
- *  read or write (nothing written then). */
+/** settings.ini changed by edit, on top of the file as it is now (SettingsFile.edit), and the panel reads it again.
+ *  Throws where it did not read or write (nothing written then). */
 async function editSettings(edit: (text: string) => string): Promise<string> {
-  const text = edit(await readText(SAVE, 'settings.ini') ?? TEMPLATE);
-  await writeFile(SAVE, 'settings.ini', text);
-  settingsText = text;
+  const text = await settingsFile.edit(edit);
   void settings.refresh();
   return text;
 }
@@ -327,7 +317,7 @@ async function editSettings(edit: (text: string) => string): Promise<string> {
  *  off, and the first Play asked; the game's own default stays off), and this device's (a phone's: device.ts).  A test
  *  page keeps free roam off (takeParams): its tools set NFSU2_ROAM where they want it */
 const DEVICE: Record<string, string> = { roam: 'on', ...deviceDefaults() };
-function resolved(host: Record<string, string> = {}): Resolved { return resolveEnv(settingsText, ENVIRONMENT, host, DEVICE); }
+function resolved(host: Record<string, string> = {}): Resolved { return resolveEnv(settingsFile.forGame, ENVIRONMENT, host, DEVICE); }
 /** the game's language (runtime/language.c): which language pack the page fetches ahead and counts */
 const language = (r: Resolved = resolved()) => (r.env.NFSU2_LANGUAGE ?? 'english').toLowerCase();
 /** the texture packs picked (runtime/web/texrep_web.c), comma-separated, '' for none: the ones the page fetches ahead
@@ -339,7 +329,7 @@ const texpack = (r: Resolved = resolved()) => [uiPack(r.env.NFSU2_UI_TEXTURES), 
  *  switch on) */
 const packs = (r: Resolved = resolved()): Packs => ({ texpack: texpack(r), songs: (r.env.NFSU2_SONGS ?? '').trim().toLowerCase(),
   damage: r.env.NFSU2_DAMAGE === '1', whine: r.env.NFSU2_GEARBOX_WHINE === '1' });
-const packsKey = () => { const p = packs(); return `${language()}/${p.texpack}/${p.songs}/${p.damage ? 1 : 0}/${p.whine ? 1 : 0}`; };
+const packsKey = (r: Resolved = resolved()) => { const p = packs(r); return `${language(r)}/${p.texpack}/${p.songs}/${p.damage ? 1 : 0}/${p.whine ? 1 : 0}`; };
 
 // ----------------------------------------------------------------- play --
 function stageCanvas(): HTMLCanvasElement {
@@ -897,13 +887,13 @@ function stopFatal(what: string, code?: string) {
  *  copies (sw.ts) and the module from the server, or from a server swapping its module.  The game is stopped and the
  *  page loaded again from the server: once a tab and module, while the server answers; else as any renderer that
  *  did not start. */
-const OTHER_KEY = 'nfsu2-other-build';
 let reloadAtExit = false;
 function otherBuild(why: string) {
   const s = session, rev = loaded!.info.rev;
   if (!s || s.ended) return;
-  let again = true;
-  try { again = sessionStorage.getItem(OTHER_KEY) === rev; if (!again) sessionStorage.setItem(OTHER_KEY, rev); } catch { /* no storage: no reload that could repeat */ }
+  // (no storage: no reload that could repeat)
+  const again = !sessionStore.usable() || sessionStore.get(OTHER_BUILD) === rev;
+  if (!again) sessionStore.set(OTHER_BUILD, rev);
   if (again || offline) {
     log.add(`[app] this page is of another build than game ${rev} (${why}), ${offline ? 'and the server does not answer' : 'after a reload for that too'}`);
     stopFatal(N('the graphics could not start'), 'GPU-RENDERER');
@@ -939,13 +929,13 @@ const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 /** The page in the game's language (settings.ini language, the page address's on a development server): English until
  *  the player picks another, in Settings or in the list at the top.  A tab that does not own the saves follows the file. */
 function applyLanguage() {
-  void setLanguage(language(resolveEnv(settingsText ?? settings.text, ENVIRONMENT, {}, DEVICE)), logLine);
+  void setLanguage(language(resolveEnv(settingsFile.forGame ?? settingsFile.text, ENVIRONMENT, {}, DEVICE)), logLine);
   syncPicker();
 }
 /** the list at the top shows the language the file asks for (disabled where another tab owns the saves) */
 function syncPicker() {
   const pick = $<HTMLSelectElement>('#lang-pick');
-  pick.value = language(resolveEnv(settingsText ?? settings.text, ENVIRONMENT, {}, DEVICE));
+  pick.value = language(resolveEnv(settingsFile.forGame ?? settingsFile.text, ENVIRONMENT, {}, DEVICE));
   pick.disabled = !instance.owner;
   // as wide as the name shown (CSS field-sizing where the browser has it; Firefox measures it here)
   if (!CSS.supports?.('field-sizing', 'content')) {
@@ -1092,7 +1082,8 @@ function onExit(s: GameSession, code: number) {
 async function saveGone(): Promise<void> {
   log.add('[app] the browser deleted this site\'s data during the game: the saves go back into the empty save folder');
   // settings.ini as the page has it now (it writes the file whenever it changes it)
-  if (settingsText !== null) void snapshotFile(playStart, SAVE, 'settings.ini', new TextEncoder().encode(settingsText));
+  const ini = settingsFile.forGame;
+  if (ini !== null) void snapshotFile(playStart, SAVE, 'settings.ini', new TextEncoder().encode(ini));
   let msg: string;
   try {
     const r = await vault.refill(playStart);
@@ -1179,7 +1170,7 @@ function siteDeps() {
 /** our controls' keys as settings.ini has them now (not while a game runs: it keeps the ones it started with), on the
  *  keys' list and in the Site tab */
 function siteKeysNow() {
-  if (!session) applySiteKeys(resolveEnv(settingsText ?? settings.text, ENVIRONMENT, {}, DEVICE).env);
+  if (!session) applySiteKeys(resolveEnv(settingsFile.forGame ?? settingsFile.text, ENVIRONMENT, {}, DEVICE).env);
   siteKeyList($('#keys'));
   siteView?.render();
   keySheet?.relabel();                    // (the controller's drawing names the sticks' clicks of ours)
@@ -1947,7 +1938,7 @@ function inviteLive(): boolean {
  *  (tidyInvite), whichever way they came. */
 async function applyInvite(given: Invite): Promise<Joined> {
   const inv = tidyInvite(given);
-  const was = await readText(SAVE, 'settings.ini') ?? settingsText ?? TEMPLATE;
+  const was = await settingsFile.peek() ?? settingsFile.forGame ?? TEMPLATE;
   const now = inviteNow(was), d = inviteDiff(inv, now);
   if (d.full) return 'full';
   if (inviteNone(d)) return 'none';
@@ -1960,8 +1951,8 @@ async function applyInvite(given: Invite): Promise<Joined> {
     text = putKey(text, 'roam_crew_colours', rgbsValue(crews)).text;
   }
   if (text !== was) {
-    await writeFile(SAVE, 'settings.ini', text);
-    settingsText = text; void settings.refresh(); players?.now(); vault?.changed(); friendsPanel?.render();
+    await settingsFile.write(text);
+    void settings.refresh(); players?.now(); vault?.changed(); friendsPanel?.render();
   }
   // (the names, for the log as it leaves the browser: privacy.ts)
   if (isOwn(inv.room ?? '')) privacy.name(inv.room, 'room');
@@ -2024,7 +2015,7 @@ async function offerInvite(given: Invite) {
   const inv = tidyInvite(given);
   // once this tab knows whether it owns the saves, has read them, and shows no other question
   await Promise.race([instance.whenOwner, new Promise(r => setTimeout(r, 500))]);
-  if (instance.owner && settingsText === null) await loadSettings().catch(() => null);
+  if (instance.owner && settingsFile.forGame === null) await loadSettings().catch(() => null);
   while (document.querySelector('dialog[open]')) await new Promise(r => setTimeout(r, 500));
   const ok = checkInvite(inv);
   if (!ok.ok) {
@@ -2033,7 +2024,7 @@ async function offerInvite(given: Invite) {
     return;
   }
   const owner = instance.owner;
-  const now = inviteNow(owner ? settingsText : await readText(SAVE, 'settings.ini').catch(() => null)), d = inviteDiff(inv, now);
+  const now = inviteNow(owner ? settingsFile.forGame : await settingsFile.peek().catch(() => null)), d = inviteDiff(inv, now);
   const v = { world: worldNamed(inv.room ?? ''), crew: inv.crew ?? '', old: worldNamed(now.room) };
   // (as the player's own settings spell it)
   if (inviteNone(d)) {
@@ -2317,7 +2308,7 @@ async function loadModule() {
 // sessionStorage names the version a reload was for: a reload that still came
 // back without it offers it, and is not repeated by itself.  A test page (the
 // address's test settings) only offers it: its tool drives it.
-const NEWER_EVERY_MS = 5 * 60_000, UPDATE_KEY = 'nfsu2-update';
+const NEWER_EVERY_MS = 5 * 60_000;
 let newer: string | null = null;
 /** the version a reload of this tab was for and did not bring */
 let tried: string | null = null;
@@ -2353,8 +2344,7 @@ function netBack() { setTimeout(() => void checkNewer(), Math.random() * 30_000)
 /** Reload for the server's version rev.  sessionStorage names it (afterUpdate); by itself only then (false: not
  *  reloaded), at Play either way. */
 async function reloadFor(rev: string, why: string, byItself: boolean): Promise<boolean> {
-  let marked = false;
-  try { sessionStorage.setItem(UPDATE_KEY, rev); marked = true; } catch { /* no storage here */ }
+  const marked = sessionStore.set(UPDATE_FOR, rev);
   if (byItself && !marked) return false;
   log.add(`[app] the server has game ${rev} now, this page ${loaded!.info.rev}: reloading (${why})`);
   await reload();
@@ -2362,11 +2352,10 @@ async function reloadFor(rev: string, why: string, byItself: boolean): Promise<b
 }
 /** after a reload for a new version: whether it brought it */
 function afterUpdate() {
-  let want: string | null = null;
-  try { want = sessionStorage.getItem(UPDATE_KEY); } catch { /* no storage here */ }
+  const want = sessionStore.get(UPDATE_FOR);
   if (!want || !loaded) return;
   if (want === loaded.info.rev) {
-    try { sessionStorage.removeItem(UPDATE_KEY); } catch { /* no storage here */ }
+    sessionStore.remove(UPDATE_FOR);
     updated = true;
     log.add(`[app] reloaded for game ${want}: this page has it`);
   } else {
@@ -2465,7 +2454,7 @@ export async function boot() {
   void setLanguage(lastLanguage(), logLine);
   // the big panel's tabs (the one open last, or the one the address names: #friends) and About's; the Other tab's
   // contents are at the Game tab's end since the Mods tab came (kept or named, #other opens Game there)
-  bigTabs = panelTabs($('#settings'), { store: 'nfsu2.page.tab', hash: true, moved: { other: { tab: 'game', at: '#game-data' } } });
+  bigTabs = panelTabs($('#settings'), { store: PAGE_TAB, hash: true, moved: { other: { tab: 'game', at: '#game-data' } } });
   panelTabs($('#about'));
   // Last.fm: its row under the songs' settings, and the scrobbles of the songs the game plays (lastfm.ts)
   const lastfmApi = new LastfmApi(), lastfmRow = new LastfmRow({ api: lastfmApi, log: logLine, say: pageToast });
@@ -2474,9 +2463,8 @@ export async function boot() {
   onLanguage(() => lastfmRow.render());
   settings = new SettingsPanel($('#settings'), {
     // another language, texture pack or songs count other files as the game data (its pack); a keyphrase sends the file
-    saveDir: SAVE, environment: ENVIRONMENT, defaults: DEVICE, onSaved: text => {
-      const was = packsKey(); settingsText = text;
-      if (packsKey() !== was) void saves.refresh();
+    file: settingsFile, environment: ENVIRONMENT, defaults: DEVICE, onSaved: (_, was) => {
+      if (packsKey() !== packsKey(resolveEnv(was, ENVIRONMENT, {}, DEVICE))) void saves.refresh();
       vault?.changed(); players?.now();
       friendsPanel?.render();
       applyLanguage();
@@ -2537,7 +2525,7 @@ export async function boot() {
   friendsPanel = new FriendsPanel($('#friends'), {
     api: friendsApi, join: room => void offerInvite({ room }), confirm: (title, body, ok) => confirmBox(title, body, ok),
     idle: () => !session && !starting, log: logLine, store: msgStore, chat: name => chatDialog.open(name), waiting: friendsWaiting,
-    crews: () => { const n = inviteNow(settingsText); return { crews: n.crews, room: n.room }; },
+    crews: () => { const n = inviteNow(settingsFile.forGame); return { crews: n.crews, room: n.room }; },
   });
   chatDialog = new ChatDialog(msgStore, { send: (name, body) => friendsPanel.send(name, body), log: logLine });
   $<HTMLButtonElement>('#play').onclick = () => void play();
@@ -2693,7 +2681,7 @@ export async function boot() {
     quickChat: () => quickChat.state(), quickChatStick: (x: number, y: number) => quickChat.stick(x, y),
     quickChatClick: () => quickChat.click(),
     messages: () => friendMessages.state(),
-    env: () => resolved().env, settingsText: () => settingsText, checks: () => [...checks.values()],
+    env: () => resolved().env, settingsText: () => settingsFile.forGame, checks: () => [...checks.values()],
     fpsMode: (m?: FpsMode) => { if (m && FPS_MODES.includes(m)) fps.set(m); return fps.mode; },
     quitTimes: { forcedCloseMaxMs: FORCED_CLOSE_MAX_MS, stopAfterMs: STOP_AFTER_MS },
   };
