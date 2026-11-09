@@ -124,7 +124,7 @@ While you drive:
 | X | Drift mode in free roam: drift handling, the drift camera and a drift score (see below); on a touch screen the Drift button, on a controller D-pad down held a second while driving |
 | O | Parked in free roam: open the hood, then the trunk alone, then the doors alone, then all of them, then close them all (see section 6); on a controller hold D-pad down a second |
 | 1 to 4, then 1 to 4 | Quick chat in free roam and in races with other players: a group, then a phrase (see section 6) |
-| I | Message a friend in free roam: the answer to the newest message, or a friend to pick (see section 6, Friends) |
+| I | Message a friend in free roam: the answer to the newest message, or a friend to pick (see section 6, Friends); 0 on that list writes to everyone nearby |
 | M, Tab | Map, messages |
 | T | Career status: what the stage still needs |
 | Esc or P | Pause; Esc also goes back in menus |
@@ -640,6 +640,11 @@ Good to know:
   How loud the horns are (yours and the others'): the game's Options, Audio, Horn Volume, also in the pause menu's
   Options, from 10 % to 100 % (the most, and the default), times the game's Master Volume, as for the game's own
   sounds (none with Master Volume at 0). Moving it sounds your horn at the new volume.
+- **Free chat (UNDRGND2):** type a message to the players near you, the ones you see in free roam, friends or not.
+  Press I, then 0 (Everyone nearby), type up to 120 characters and press Enter; on a touch screen, Message a friend in
+  the chat button's sheet, then Everyone nearby. Only a claimed name can write. A player you block, or who blocks you,
+  never reads yours nor you theirs. Nearby messages are not kept. Offensive words are filtered, and a player who keeps
+  writing them can't send messages for a few minutes.
 - **Quick chat:** say one of your sixteen set phrases to the players near you. There is no typing, so there is nothing
   to read that someone made up, and everyone reads a phrase in their own language. Press 1 to 4 for a group, then 1 to
   4 for its phrase; on a controller, press the right stick in, flick it (up, right, down, left) for a group, then

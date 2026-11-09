@@ -388,6 +388,7 @@ enum Cmd {
     Linked(u32, String, oneshot::Sender<Option<(u32, Option<Arc<str>>)>>),
     Where(Vec<Arc<str>>, oneshot::Sender<Vec<Option<hub::Whereabouts>>>),
     Hosted(u32, oneshot::Sender<Option<hub::Hosted>>),
+    Near(u32, oneshot::Sender<Vec<u32>>),
     Stop,
 }
 
@@ -539,6 +540,13 @@ impl RoamHub {
         let _ = self.tx.send(Cmd::Hosted(vip, tx));
         rx
     }
+
+    /// the browsers whose players browser `vip`'s players are linked with now: `Hub::near`
+    pub fn near(&self, vip: u32) -> oneshot::Receiver<Vec<u32>> {
+        let (tx, rx) = oneshot::channel();
+        let _ = self.tx.send(Cmd::Near(vip, tx));
+        rx
+    }
 }
 
 /// a panic in the hub (a bug) leaves the hub's thread running: the panic hook has printed it, the next frame or
@@ -635,6 +643,9 @@ fn run(
             }),
             Cmd::Hosted(vip, tx) => guard(|| {
                 let _ = tx.send(hub.hosted(vip));
+            }),
+            Cmd::Near(vip, tx) => guard(|| {
+                let _ = tx.send(hub.near(vip));
             }),
             Cmd::Stop => {
                 // no more ticks, so no more lists: the switch's send goes too (it holds the switch, which holds

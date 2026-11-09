@@ -12,6 +12,10 @@
 //                A friend's notice that it came into the player's room has "I Message" under it: I writes to it then.
 //   wire         {"t":"friend","op":"msg","name","body","id"} -> {"op":"msg","id","done"};
 //                {"op":"mail","from","body","at"} and the list's "mail" bring the friends' (friends.rs).
+//   nearby       UNDRGND2's free chat: the card's first row, 0 "Everyone nearby", writes to the players around (the ones
+//                the player sees in free roam, friends or not), under a claimed name only.  {"op":"near","body","id"} ->
+//                {"op":"near","id","done","n"}; theirs come as {"op":"near","from","body"}, a line in the log marked
+//                "(nearby)", not kept.
 //   start page   friends.ts FriendsPanel: Message on each friend, the unread ones counted on it; ChatDialog.
 import type { GameSession } from './game';
 import { gameHas, KEY_MESSAGE } from './gamekeys';
@@ -38,6 +42,8 @@ const LINE_MS = 8000, LINE_MS_PER_CHAR = 60, LINE_MS_MAX = 15_000;
 const SEND_WAIT_MS = 10_000;
 /** what the store keeps: messages per friend, friends */
 const KEEP_MSGS = 40, KEEP_FRIENDS = 60;
+/** the card's "Everyone nearby": `to` for the players around (no name is empty or starts with a control character) */
+const NEAR = '\u0000near';
 /** the friend list's rows at most (keys 1-9) */
 const PICK_MAX = 9;
 
@@ -174,7 +180,7 @@ export class FriendMessages {
   /** a friend whose notice says it came into free roam (offer), for MSG_KEY until then */
   private offered: { name: string; until: number } | null = null;
   /** the friends' messages not shown yet (the player was not driving) */
-  private queue: { from: string; body: string }[] = [];
+  private queue: { from: string; body: string; near?: boolean }[] = [];
   /** the player's messages on their way: page id -> the friend, its time (the store's key), its text, when it went */
   private waiting = new Map<number, { name: string; t: number; body: string; at: number }>();
   private nextId = 1;
@@ -235,7 +241,14 @@ export class FriendMessages {
       if (this.mode === 'pick') this.draw();
     } else if (m.op === 'mail') {
       for (const x of mailOf([m])) this.incoming(x.from, x.body, x.t);
-    } else if (m.op === 'msg') {
+    } else if (m.op === 'near' && m.id == null) {
+      // a nearby player's message: on the log now or once the player drives, not kept
+      if (typeof m.from !== 'string' || typeof m.body !== 'string' || !m.body || !this.on) return;
+      this.deps.log(`[near] from ${m.from}`);
+      this.queue.push({ from: m.from, body: m.body.slice(0, MSG_MAX), near: true });
+      if (this.queue.length > 30) this.queue.shift();
+      this.tick();
+    } else if (m.op === 'msg' || m.op === 'near') {
       const w = this.waiting.get(Number(m.id));
       if (!w) return;
       this.waiting.delete(Number(m.id));
@@ -253,6 +266,13 @@ export class FriendMessages {
 
   /** the server's answer to the player's message: its line in the log, or why it did not go */
   private answered(w: { name: string; t: number; body: string }, done: string) {
+    if (w.name === NEAR) {
+      this.deps.log(`[near] ${done}`);
+      if (done === 'sent') this.deps.line(t('To players nearby'), w.body, true, '', lineMs(w.body));
+      else if (done === 'alone') this.deps.toast(t('No player near you to read it'));
+      else { const why = sendTrouble(done, ''); if (why) this.deps.toast(why); }
+      return;
+    }
     this.deps.log(`[msg] to ${w.name}: ${done}`);
     if (done === 'sent' || done === 'kept') {
       this.store.mark(w.name, w.t, done);
@@ -272,11 +292,11 @@ export class FriendMessages {
     }
     if (this.mode && !this.deps.driving()) this.close();
     if (!this.queue.length || !this.deps.driving()) return;
-    for (const { from, body } of this.queue.splice(0)) {
-      const ms = lineMs(body);
-      this.deps.line(from, body, false, '', ms, () => this.write(from, true));
-      this.store.read(from);
-      this.newest = { name: from, at: now }; this.offered = null;
+    for (const { from, body, near } of this.queue.splice(0)) {
+      const ms = lineMs(body), to = near ? NEAR : from;
+      this.deps.line(from, body, false, near ? t('(nearby)') : '', ms, () => this.write(to, true));
+      if (!near) this.store.read(from);
+      this.newest = { name: to, at: now }; this.offered = null;
       this.deps.hint(touchFirst() ? null : ms);
     }
   }
@@ -339,7 +359,8 @@ export class FriendMessages {
   private cardKey(e: KeyboardEvent) {
     if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); this.close(); return; }
     if (this.mode === 'pick' && !e.repeat) {
-      const d = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+      const d = /^(?:Digit|Numpad)([0-9])$/.exec(e.code);
+      if (d?.[1] === '0') { e.preventDefault(); this.write(NEAR, false); return; }
       const f = d ? this.sorted()[+d[1] - 1] : undefined;
       if (f) { e.preventDefault(); this.write(f.name, false); }
     } else if (this.mode === 'write' && e.code === 'Enter' && !e.isComposing) {
@@ -359,6 +380,13 @@ export class FriendMessages {
     const body = (input?.value ?? '').replace(/\s+/g, ' ').trim().slice(0, MSG_MAX);
     if (!body || !this.to) { this.close(); return; }
     const id = this.nextId++, at = Date.now();
+    if (this.to === NEAR) {
+      if (!this.deps.send({ op: 'near', body, id })) { this.deps.toast(t('The message was not sent: try again in a moment')); return; }
+      this.waiting.set(id, { name: NEAR, t: at, body, at: performance.now() });
+      this.deps.log(`[near] sending (${body.length} characters)`);
+      this.close();
+      return;
+    }
     if (!this.deps.send({ op: 'msg', name: this.to, body, id })) { this.deps.toast(t('The message was not sent: try again in a moment')); return; }
     this.store.add(this.to, { dir: 'out', body, t: at, st: 'wait' }, false);
     this.store.read(this.to);
@@ -376,7 +404,14 @@ export class FriendMessages {
     c.dataset.mode = this.touch ? 'touch' : 'keys';
     const kids: HTMLElement[] = [];
     if (this.mode === 'pick') {
-      kids.push(block(el('div', 'ov-title', t('Message a friend'))));
+      kids.push(block(el('div', 'ov-title', t('Send a message'))));
+      // first: everyone nearby (0)
+      const nearName = el('span', '', t('Everyone nearby'));
+      let nearRow: HTMLElement;
+      if (this.touch) { nearRow = el('button', 'msg-friend'); (nearRow as HTMLButtonElement).type = 'button'; nearRow.append(nearName); }
+      else { nearRow = act('0', nearName); nearRow.classList.add('msg-friend'); }
+      nearRow.dataset.friend = NEAR;
+      kids.push(block(nearRow));
       const list = this.sorted();
       const rows = list.map((f, i) => {
         const where = f.at === 'roam' ? t('free roam') : f.at === 'online' ? t('Online lobby') : t('offline');
@@ -391,9 +426,10 @@ export class FriendMessages {
         : block(el('div', 'ov-dim', this.listed ? t('Touch front bumpers in free roam for 3 s to add a player.') : t('Wait a moment'))));
       if (!this.touch) kids.push(block(el('div', 'ov-small', t('Esc closes'))));
     } else if (this.mode === 'write') {
-      kids.push(block(el('div', 'ov-title', t('Message {name}', { name: this.to }))));
+      const title = this.to === NEAR ? t('Everyone nearby') : t('Message {name}', { name: this.to });
+      kids.push(block(el('div', 'ov-title', title)));
       // what is answered: the friend's message, when it is the conversation's newest
-      const body: HTMLElement[] = [], last = this.store.messages(this.to).at(-1);
+      const body: HTMLElement[] = [], last = this.to === NEAR ? undefined : this.store.messages(this.to).at(-1);
       if (last?.dir === 'in') {
         const q = el('div', 'msg-quote'), b = el('b', '', this.to);
         q.append(b, document.createTextNode(` ${last.body}`));
@@ -402,7 +438,7 @@ export class FriendMessages {
       const input = document.createElement('input');
       input.type = 'text'; input.className = 'msg-input'; input.maxLength = MSG_MAX; input.autocomplete = 'off';
       input.enterKeyHint = 'send'; input.spellcheck = true;
-      input.setAttribute('aria-label', t('Message {name}', { name: this.to }));
+      input.setAttribute('aria-label', title);
       const left = el('span', 'msg-left', String(MSG_MAX));
       input.addEventListener('input', () => { left.textContent = String(MSG_MAX - input.value.length); });
       body.push(input);

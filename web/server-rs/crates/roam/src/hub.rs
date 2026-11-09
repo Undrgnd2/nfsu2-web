@@ -2268,6 +2268,21 @@ impl Hub {
         })
     }
 
+    /// The browsers whose players are linked now with the player of browser `vip` (its first player's links and a
+    /// co-op second one's; the players each one sees around it in free roam, so never one it blocks or that blocks it:
+    /// `blocked` keeps those apart), each once: where a typed nearby message (the server's friends.rs `near`) goes.
+    /// None of an impostor's (a name claimed by another keyphrase gets no links either).
+    pub fn near(&self, vip: u32) -> Vec<u32> {
+        let mut v: Vec<u32> = Vec::new();
+        for p in self.players().filter(|p| p.vip == vip && !p.impostor) {
+            let to = p.links.iter().filter(|l| self.live(l)).filter_map(|l| self.player(l.slot));
+            v.extend(to.filter(|q| q.vip != vip && !q.impostor).map(|q| q.vip));
+        }
+        v.sort_unstable();
+        v.dedup();
+        v
+    }
+
     /// The race lobby the player of browser `vip` hosts (`Hosted`; its first player's, not a co-op second one's), when
     /// its last advert came within LOBBY_STALE_MS and says it is open (it takes players now, full or not): an invite
     /// to a friend (the server's friends.rs) names it, and the friend's game joins it from wherever it is

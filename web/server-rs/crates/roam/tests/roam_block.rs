@@ -142,3 +142,21 @@ fn a_claimed_names_keyphrase_stays_blocked_under_its_next_name() {
     assert!(!has(&k, 0, 1) && !has(&k, 1, 0), "Robert is Bob's keyphrase");
     assert!(has(&k, 0, 2) && has(&k, 1, 2));
 }
+
+// UNDRGND2's nearby chat (`Hub::near`): the browsers whose players a browser's players are linked with now, never one
+// that blocks it or that it blocks, never itself, and none for a browser that is not on the switch
+#[test]
+fn near_is_the_linked_browsers_never_a_blocked_one() {
+    let mut k = Kit::new(RoamOptions::default());
+    for (i, name) in [(0u32, &b"anna"[..]), (1, b"Bob"), (2, b"carl")] {
+        place(&mut k, i, name, i as f64 * 10.0);
+    }
+    k.hub.tick();
+    assert_eq!(k.hub.near(V(0)), vec![V(1), V(2)]);
+    k.hub.blocks(V(0), vec!["bob".into()]);
+    k.hub.tick();
+    assert_eq!(k.hub.near(V(0)), vec![V(2)], "anna blocks Bob");
+    assert_eq!(k.hub.near(V(1)), vec![V(2)], "Bob is blocked by anna");
+    assert_eq!(k.hub.near(V(2)), vec![V(0), V(1)]);
+    assert!(k.hub.near(V(9)).is_empty(), "no such browser");
+}

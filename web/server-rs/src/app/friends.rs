@@ -26,6 +26,15 @@
 //! - {"t":"friend","op":"msg","name":<a friend>,"body":<at most PAGE_MSG_LEN characters>,"id":<the page's>}: a message
 //!   (nfsu2-online buddy.rs `page_send`: to the friend's EA Messenger, else its pages, else it waits 7 days) ->
 //!   {"t":"friend","op":"msg","name":...,"id":...,"done":"sent"|"kept"|"none"|"empty"|"off"|"full"|"claim"|"rate"}
+//! - {"t":"friend","op":"near","body":<at most PAGE_MSG_LEN characters>,"id":<the page's>}: a typed message to the
+//!   players around (UNDRGND2's free chat beside quick chat's set phrases): to each browser whose players its players
+//!   are linked with now (nfsu2-roam `Hub::near`: the players it sees, never one it blocks or that blocks it), each of
+//!   their pages hearing {"t":"friend","op":"near","from":<the sender's claimed name>,"body":...} ->
+//!   {"t":"friend","op":"near","id":...,"done":"sent"|"alone"|"empty"|"off"|"claim"|"rate","n":<pages told>}.  Only a
+//!   player under a claimed name writes; a line that reads as a slur (nfsu2-names `chat_slur`) goes to no one and
+//!   its sender is told it went, and NEAR_SLURS of them in NEAR_SLUR_WINDOW_MS turn the player's off for
+//!   NEAR_MUTE_MS ("off").  The console has who wrote to how many, never what (but the slur's word, as the Online
+//!   lobby's chat has it).
 //! - {"t":"friend","op":"invite","name":<a friend>,"kind":<the race's kind, roam_game.c race_kind's word>,"stage":<its
 //!   career stage, 0 none>}: an invite to the race lobby its player hosts (runtime/roam_game.c, the lobby's card) ->
 //!   {"t":"friend","op":"invite","name":<the friend's name as listed>,"done":"sent"|"claim"|"rate"|"none"|"nolobby"|
@@ -91,6 +100,12 @@ pub const ASK_BURST: f64 = 5.0;
 pub const ASK_RATE: f64 = 1.0 / 30.0;
 pub const INVITE_BURST: f64 = 6.0;
 pub const INVITE_RATE: f64 = 1.0 / 5.0;
+pub const NEAR_BURST: f64 = 3.0;
+pub const NEAR_RATE: f64 = 0.5;
+/// nearby messages that read as slurs: this many within the window turn the player's off for NEAR_MUTE_MS
+const NEAR_SLURS: usize = 3;
+const NEAR_SLUR_WINDOW_MS: i64 = 10 * 60_000;
+const NEAR_MUTE_MS: i64 = 10 * 60_000;
 pub const DISCORD_BURST: f64 = 5.0;
 pub const DISCORD_RATE: f64 = 1.0 / 10.0;
 /// the most of a POST's body (an op and a name)
@@ -114,6 +129,9 @@ pub struct Friends {
     asks: Rate,
     invites: Rate,
     discords: Rate,
+    nears: Rate,
+    /// per claimed name (lower case): its nearby messages' slurs (when) and until when its messages are off
+    near_slurs: std::sync::Mutex<std::collections::HashMap<String, (Vec<i64>, i64)>>,
 }
 
 /// what `can` found: the other player's browser and keyphrase, its claimed name, and the state ("new", ...)
@@ -129,7 +147,8 @@ impl Friends {
         let (reads, says, msgs) = (Rate::new(READ_BURST, READ_RATE), Rate::new(SAY_BURST, SAY_RATE), Rate::new(MSG_BURST, MSG_RATE));
         let (asks, discords) = (Rate::new(ASK_BURST, ASK_RATE), Rate::new(DISCORD_BURST, DISCORD_RATE));
         let invites = Rate::new(INVITE_BURST, INVITE_RATE);
-        Arc::new(Friends { online, roam, lan, claims, reads, says, msgs, asks, invites, discords })
+        let (nears, near_slurs) = (Rate::new(NEAR_BURST, NEAR_RATE), Default::default());
+        Arc::new(Friends { online, roam, lan, claims, reads, says, msgs, asks, invites, discords, nears, near_slurs })
     }
 
     /// the pages' friend messages come here (the switch holds this weakly: it outlives nothing), and a friend's
@@ -162,6 +181,11 @@ impl Friends {
         self.asks.prune();
         self.invites.prune();
         self.discords.prune();
+        self.nears.prune();
+        let now = Self::now();
+        if let Ok(mut m) = self.near_slurs.lock() {
+            m.retain(|_, (times, until)| *until > now || times.iter().any(|t| now - t < NEAR_SLUR_WINDOW_MS));
+        }
     }
 
     fn now() -> i64 {
@@ -186,6 +210,13 @@ impl Friends {
             let done = self.send(owner, group, &name, body).await;
             let id = m.get("id").filter(|v| v.is_number()).cloned().unwrap_or(Value::Null);
             return self.say(vip, json!({ "t": "friend", "op": "msg", "name": name, "id": id, "done": done }));
+        }
+        // a nearby message has its own budget, and is always answered too
+        if op == (Some("friend"), Some("near")) {
+            let body = m.get("body").and_then(Value::as_str).unwrap_or("");
+            let (done, n) = self.near(vip, owner, group, body).await;
+            let id = m.get("id").filter(|v| v.is_number()).cloned().unwrap_or(Value::Null);
+            return self.say(vip, json!({ "t": "friend", "op": "near", "id": id, "done": done, "n": n }));
         }
         // an invite has its own budget too, and is always answered (the page says what became of it)
         if op == (Some("friend"), Some("invite")) {
@@ -214,6 +245,49 @@ impl Friends {
             }
             _ => {}
         }
+    }
+
+    /// A typed message of keyphrase `owner`'s player (browser `vip`) to the players around it (the module's doc): what
+    /// became of it, and how many pages were told
+    async fn near(&self, vip: u32, owner: Option<Arc<str>>, group: Arc<str>, body: &str) -> (&'static str, usize) {
+        let Some(o) = owner else { return ("claim", 0) };
+        if !self.nears.take(&o, "") {
+            return ("rate", 0);
+        }
+        let body = nfsu2_bans::clean_msg(body).chars().take(PAGE_MSG_LEN).collect::<String>();
+        if body.is_empty() {
+            return ("empty", 0);
+        }
+        let Some(me) = self.lists(o, group, FriendAsk::List).await.me else { return ("claim", 0) };
+        let (key, now) = (me.to_lowercase(), Self::now());
+        if let Some(word) = nfsu2_names::chat_slur(&body) {
+            let mut muted = false;
+            if let Ok(mut m) = self.near_slurs.lock() {
+                let (times, until) = m.entry(key).or_default();
+                times.retain(|t| now - t < NEAR_SLUR_WINDOW_MS);
+                times.push(now);
+                if times.len() >= NEAR_SLURS {
+                    *until = now + NEAR_MUTE_MS;
+                    times.clear();
+                    muted = true;
+                }
+            }
+            let then = if muted { format!("; nearby messages off for {} s", NEAR_MUTE_MS / 1000) } else { String::new() };
+            let word = serde_json::to_string(word).unwrap_or_default();
+            eprintln!("[near] {me:?}: a message with {word} in it, sent to no one{then}");
+            return ("sent", 0);
+        }
+        if self.near_slurs.lock().is_ok_and(|m| m.get(&key).is_some_and(|(_, until)| *until > now)) {
+            return ("off", 0);
+        }
+        let to = self.roam.near(vip).await.unwrap_or_default();
+        if to.is_empty() {
+            return ("alone", 0);
+        }
+        let v = bytes::Bytes::from(nfsu2_util::json::stringify(&json!({ "t": "friend", "op": "near", "from": me, "body": body })));
+        let n = to.into_iter().filter(|&x| self.lan.send_text(x, v.clone())).count();
+        eprintln!("[near] {me:?} wrote to {n} nearby");
+        (if n > 0 { "sent" } else { "alone" }, n)
     }
 
     /// a message of keyphrase `owner`'s player to its friend `name` (the module's doc): what became of it

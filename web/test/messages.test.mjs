@@ -125,7 +125,7 @@ test('in the game: I with nothing to answer picks a friend; Esc; never in a fiel
   assert.equal(await p.evaluate(() => /** @type {any} */ (window).gameT), 1, 'T goes to the game');
   await p.keyboard.press('KeyI');
   assert.deepEqual(await take(p, 'sent'), [{ op: 'where' }], 'where each plays now');
-  assert.equal(await card(p), 'Message a friend 1 Bo_ free roam 2 Cy_ Online lobby 3 Gus offline Esc closes');
+  assert.equal(await card(p), 'Send a message 0 Everyone nearby 1 Bo_ free roam 2 Cy_ Online lobby 3 Gus offline Esc closes');
   await p.keyboard.press('Digit2');
   assert.match(await card(p), /^Message Cy_ Enter sends/);
   await p.keyboard.press('Escape');
@@ -135,7 +135,7 @@ test('in the game: I with nothing to answer picks a friend; Esc; never in a fiel
   await server(p, { ...list, friends: [] });
   await server(p, { op: 'where', friends: [] });
   await p.keyboard.press('KeyI');
-  assert.equal(await card(p), 'Message a friend Touch front bumpers in free roam for 3 s to add a player. Esc closes');
+  assert.equal(await card(p), 'Send a message 0 Everyone nearby Touch front bumpers in free roam for 3 s to add a player. Esc closes');
   await p.keyboard.press('Escape');
   // not in a text field, not with a modifier
   await p.focus('#field');
@@ -154,7 +154,7 @@ test('in the game: I with nothing to answer picks a friend; Esc; never in a fiel
   assert.equal(await p.evaluate(() => /** @type {any} */ (window).gameI), 1, 'I goes to the game');
   await p.evaluate(() => { /** @type {any} */ (window).keys = 2; });           // (F's bit: I is ours again)
   await p.keyboard.press('KeyI');
-  assert.match(await card(p) ?? '', /^Message a friend/);
+  assert.match(await card(p) ?? '', /^Send a message/);
   await p.keyboard.press('Escape');
   // a message the link could not take; one the server never answered
   await server(p, { op: 'mail', from: 'Bo_', body: 'yo', at: 3 });
@@ -184,7 +184,7 @@ test('in the game: a friend\'s notice offers I for a message to it, while the no
   await p.keyboard.press('Escape');
   await wait(p, 450);
   await p.keyboard.press('KeyI');
-  assert.match(await card(p) ?? '', /^Message a friend/, 'the notice gone: the friends to pick');
+  assert.match(await card(p) ?? '', /^Send a message/, 'the notice gone: the friends to pick');
   await p.keyboard.press('Escape');
   // a friend's message after it: I answers that one
   await p.evaluate(() => /** @type {any} */ (window).msgs.offer('Cy_', 5000));
@@ -205,13 +205,46 @@ test('in the game on a touch screen: the sheet\'s Message a friend, a tap on a f
   await server(p, where);
   await p.evaluate(() => /** @type {any} */ (window).msgs.pickByTouch());
   assert.equal(await p.$eval('.msg-card', c => c.dataset.mode), 'touch');
-  assert.deepEqual(await p.$$eval('.msg-card button.msg-friend', bs => bs.map(b => b.dataset.friend)), ['Bo_', 'Cy_', 'Gus'], 'rows to tap, no keys');
+  assert.deepEqual(await p.$$eval('.msg-card button.msg-friend', bs => bs.map(b => b.dataset.friend)), ['\u0000near', 'Bo_', 'Cy_', 'Gus'], 'rows to tap, no keys');
   await p.click('.msg-card button[data-friend="Gus"]');
   assert.match(await card(p), /^Message Gus Send 120$/);
   await p.fill('.msg-input', 'later');
   await p.click('.msg-send');
   assert.deepEqual((await take(p, 'sent')).at(-1), { op: 'msg', name: 'Gus', body: 'later', id: 1 });
   assert.equal(await card(p), null);
+  await p.close();
+});
+
+test('in the game: 0 writes to everyone nearby; theirs on the log, not kept', async () => {
+  const p = await page();
+  await server(p, list);
+  await server(p, where);
+  await p.keyboard.press('KeyI');
+  await take(p, 'sent');
+  await p.keyboard.press('Digit0');
+  assert.match(await card(p), /^Everyone nearby Enter sends/);
+  await p.keyboard.type('meet at the mall');
+  await p.keyboard.press('Enter');
+  assert.deepEqual(await take(p, 'sent'), [{ op: 'near', body: 'meet at the mall', id: 1 }]);
+  assert.equal(await card(p), null);
+  await server(p, { op: 'near', id: 1, done: 'sent', n: 2 });
+  assert.deepEqual(await take(p, 'lines'), ['> To players nearby: meet at the mall']);
+  for (const [done, why] of [['alone', 'No player near you to read it'], ['claim', 'Claim your name on the start page to send messages'], ['off', 'You can\'t send messages for a few minutes']]) {
+    await p.keyboard.press('KeyI');
+    await p.keyboard.press('Digit0');
+    await p.keyboard.type('x');
+    await p.keyboard.press('Enter');
+    const { id } = (await take(p, 'sent')).at(-1);
+    await server(p, { op: 'near', id, done });
+    assert.deepEqual(await take(p, 'toasts'), [why], done);
+  }
+  // a nearby player's: on the log, and I answers everyone nearby
+  await server(p, { op: 'near', from: 'Zed', body: 'on my way' });
+  assert.deepEqual(await take(p, 'lines'), ['< Zed: on my way (nearby)']);
+  await p.keyboard.press('KeyI');
+  assert.match(await card(p), /^Everyone nearby Enter sends/);
+  await p.keyboard.press('Escape');
+  assert.equal(await p.evaluate(() => /** @type {any} */ (window).store.messages('Zed').length), 0, 'not kept');
   await p.close();
 });
 
