@@ -45,8 +45,9 @@ import { SettingsFile } from './settings-store';
 import { checkSaves, exists, filesOf, listProfiles, NO_SAVE, PROFILES_DIR, readText, removeSaveDir, SavesOff, setWritesOff, settleStaged, UNREADABLE, writeFile, type SavesCheck } from './savefs';
 import { coverOf, newProfileName, turnOnAutosave } from './profile';
 import { crewControl, SettingsPanel, showCrewCounts } from './settings-ui';
-import { askCrews, askWorlds, countText, PlayersPanel, queueText, roomHash, roomText, serverAnswers, watchPlayers, type PlayerCounts, type Reach } from './players';
+import { askCrews, askSpots, askWorlds, countText, PlayersPanel, queueText, roomHash, roomText, serverAnswers, watchPlayers, type PlayerCounts, type Reach } from './players';
 import { isMain, isOwn, noGhost, WORLDS, worldName, worldNamed, worldRooms } from './worlds';
+import { atName, friendSpot, SAID_LOCKED, SAID_NOT_FOUND, SAID_NOT_NOW, TRACKS, trackRoom, trackRooms, travelSaid, travelState, whyText, WHY_COOP } from './tracks';
 import { panelTabs, refitTabs, type PanelTabs } from './tabs';
 import { CREW_MAX, crewList, crewsOf, crewsValue, freeColour, rgbsValue, rgbWords, type Crew } from './crews';
 import { checkInvite, checkRoom, inviteLink, readInvite, sameName, tidyInvite, type Invite } from './invite';
@@ -64,7 +65,7 @@ import { FpsOverlay, FPS_MODES, type FpsMode } from './overlay';
 import { LobbyPanel } from './lobby';
 import { ICON as CHAT_ICON, QuickChat } from './quickchat';
 import { groupsOf, phrasesOf } from './phrases';
-import { FriendPrompt, FriendsApi, FriendsPanel } from './friends';
+import { FriendPrompt, FriendsApi, FriendsPanel, type Friend } from './friends';
 import { ChatDialog, FriendMessages, MessageStore } from './messages';
 import { named } from './cards';
 import { applySiteKeys, keyName, menuKeyOf, siteButton, siteKey, siteKeyList, SiteKeysView } from './sitekeys';
@@ -288,8 +289,11 @@ function evaluate() {
   }
   if (pending) { if (phase !== 'exited') setPhase('boot', T('Loading'), () => `${label(pending)}: ${detail(pending)}`); return; }
   if (phase === 'exited') { updatePlay(); return; }
-  const press = N('Press Play to start.');
-  setPhase('ready', T('Ready'), offline ? () => t('No connection to the server: you can play, but not with others. {press}', { press: t(press) }) : T(press));
+  // with free roam with others on, where the others are: new players looked for them in the game's Online menu (its
+  // race rooms) or Quick Race's Free Run
+  const press = N('Press Play to start.'), career = N('Play career to join others in free roam.');
+  setPhase('ready', T('Ready'), offline ? () => t('No connection to the server: you can play, but not with others. {press}', { press: t(press) })
+    : () => t(resolved().env.NFSU2_ROAM === '1' ? career : press));
 }
 
 function updatePlay() {
@@ -305,6 +309,7 @@ async function loadSettings(): Promise<string | null> {
   const text = await settingsFile.load(instance.owner);
   // who plays on this server, asked again with this file's room and crews (the first question went without them)
   players?.now();
+  evaluate();                           // (Ready's line: free roam with others on or off)
   return text;
 }
 /** settings.ini changed by edit, on top of the file as it is now (SettingsFile.edit), and the panel reads it again.
@@ -394,7 +399,8 @@ async function askCloud(): Promise<boolean> {
  * playing without saving; at a Play where cloud saves were asked, the next one.
  */
 async function askFsaa() {
-  if (testPage() || deviceKind() !== 'pc') return;
+  // (not where it is not offered: settings.ini's fsaa, or this computer's graphics, device.ts fsaaFails)
+  if (testPage() || deviceKind() !== 'pc' || resolved().env.NFSU2_FSAA === '0') return;
   const text = await readText(SAVE, 'registry.txt').catch(() => null);
   if (text === null || !fsaaAsk(text)) return;
   const body = document.createElement('div');
@@ -1675,6 +1681,9 @@ function openMenu() {
   fsButton.hidden = !canFullscreen() && fromHomeScreen();         // from an iPhone's Home Screen: already without bars
   m.querySelector<HTMLButtonElement>('[data-act="worlds"]')!.hidden = roamRoom === null || !session?.net?.room;
   menuValue('worlds', roamRoom === null ? '' : worldName(roamRoom));
+  const trip = travelNow();
+  m.querySelector<HTMLButtonElement>('[data-act="tracks"]')!.hidden = !trip;
+  menuValue('tracks', trip ? atName(trip.at) : '');
   m.querySelector<HTMLButtonElement>('[data-act="solid"]')!.hidden = roamCollide === null || !session?.net?.solid;
   menuValue('solid', ghostWord());
   m.querySelector<HTMLButtonElement>('[data-act="crews"]')!.hidden = roamCrews === null || !session?.net?.crews;
@@ -1710,16 +1719,16 @@ function menuValue(act: string, text: string) {
 const collideOf = (v: string | undefined): Collide => { const c = checkSetting('roam_collide', v ?? ''); return c?.ok ? c.value as Collide : 'on'; };
 const crewsCount = () => roamCrews?.length ? String(roamCrews.length) : '';
 /** what the menu shows: its list, or in its place its World, Crews or Friends (a game in free roam) or its Controls */
-type MenuPage = 'main' | 'worlds' | 'crews' | 'friends' | 'controls';
+type MenuPage = 'main' | 'worlds' | 'tracks' | 'crews' | 'friends' | 'controls';
 /** each page's row on the list */
-const MENU_ROW: Record<Exclude<MenuPage, 'main'>, string> = { worlds: 'worlds', crews: 'crews', friends: 'friends', controls: 'help' };
+const MENU_ROW: Record<Exclude<MenuPage, 'main'>, string> = { worlds: 'worlds', tracks: 'tracks', crews: 'crews', friends: 'friends', controls: 'help' };
 let menuAt: MenuPage = 'main';
 /** The menu on page p: the others hidden, the dialog named by p's title.  Back on the list from a page: the keyboard
  *  (or controller) on that page's row, with its state as it is now. */
 function menuPage(p: MenuPage) {
   const was = menuAt;
   menuAt = p;
-  for (const id of ['main', 'worlds', 'crews', 'friends', 'controls'] as const) $(`#menu-${id}`).hidden = id !== p;
+  for (const id of ['main', 'worlds', 'tracks', 'crews', 'friends', 'controls'] as const) $(`#menu-${id}`).hidden = id !== p;
   $('#menu').setAttribute('aria-labelledby', p === 'main' ? 'menu-title' : `menu-${p}-title`);
   if (p !== 'main' || was === 'main') return;
   popAsk++;                                       // (a count asked for the Crews page: not drawn now)
@@ -1815,6 +1824,68 @@ async function switchWorld(room: string) {
   log.add(`[app] the menu's World: ${isOwn(room) ? 'a world of the player\'s own' : worldName(room)}`);
   await joinHere({ room }, true);
 }
+/** the game's trips (tracks.ts travelState of its status's "travel"): where the car is and why a trip cannot go now;
+ *  null: none (a module without them, no game, or not in a career) */
+const travelNow = () => (session?.input?.travel ? travelState(session.status?.read()?.get('travel')) : null);
+/** how many were at each race track's spot when the menu's Tracks last asked, by the spot's room (tracks.ts trackRoom) */
+let trackCountsNow = new Map<number, number>();
+let trackAsk = 0;
+/** The menu's Tracks (career free roam on the race tracks' own maps, runtime/travel.c), in the menu's place (the menu
+ *  opened first, if it isn't): Back to the city while the car is on one, then each spot with how many are there (asked
+ *  of the server as it opens: players.ts askSpots), the car's own marked; why a trip
+ *  cannot go now above them, which then are off. */
+function openTracks() {
+  if (!travelNow()) return;
+  if (!$<HTMLDialogElement>('#menu').open) openMenu();
+  drawTracks();
+  menuPage('tracks');
+  const box = $('#menu-tracks-box');
+  (box.querySelector<HTMLElement>('[aria-current="true"]') ?? box.querySelector<HTMLElement>('button:not(:disabled)'))?.focus();
+  const n = ++trackAsk, game = session, rooms = trackRooms(roomHash(roamRoom ?? ''));
+  if (offline || roamRoom === null) return;
+  void askSpots(rooms, 5000).then(counts => {
+    if (!counts || n !== trackAsk || session !== game || !menuOn('tracks')) return;
+    trackCountsNow = counts;
+    const had = box.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.at : undefined;
+    drawTracks();
+    if (had !== undefined) box.querySelector<HTMLElement>(`[data-at="${had}"]`)?.focus();
+  });
+}
+function drawTracks() {
+  const st = travelNow(), at = st?.at ?? 0, why = st?.why ?? 0, base = roomHash(roamRoom ?? ''), rows: HTMLElement[] = [];
+  const note = $('#menu-tracks-note');
+  note.textContent = whyText(why);
+  note.hidden = !why;
+  if (at) {
+    const back = el('button', { type: 'button', className: 'menu-row go', textContent: t('Back to the city') });
+    back.dataset.at = '0';
+    back.disabled = !!why && why !== WHY_COOP;         // (player 2 waits for the city: the way there stays open)
+    back.onclick = () => travelTo(0);
+    rows.push(back);
+  }
+  TRACKS.forEach((s, i) => {
+    const b = el('button', { type: 'button', className: 'menu-row' });
+    b.dataset.at = String(i + 1);
+    const here = at === i + 1, n = trackCountsNow.get(trackRoom(base, s.key));
+    if (here) { b.classList.add('selected'); b.setAttribute('aria-current', 'true'); }
+    else b.disabled = !!why;
+    const end = el('span', { className: 'menu-end' });
+    end.append(el('span', { className: 'menu-val', textContent: n === undefined ? '' : countText(n) }));
+    end.insertAdjacentHTML('beforeend', CHECK);
+    b.append(el('span', { textContent: t(s.name) }), end);
+    b.onclick = () => travelTo(i + 1);
+    rows.push(b);
+  });
+  $('#menu-tracks-box').replaceChildren(...rows);
+}
+/** a spot picked in the menu's Tracks (0: back to the city): back to the game, which goes there */
+function travelTo(k: number) {
+  const m = $<HTMLDialogElement>('#menu'); if (m.open) m.close();
+  const st = travelNow();
+  if (!st || st.at === k || (st.why && !(k === 0 && st.why === WHY_COOP))) return;
+  log.add(`[app] the menu's Tracks: ${k ? TRACKS[k - 1].name : 'back to the city'}`);
+  session?.input?.travel?.(k);
+}
 /** The menu's Crews (free roam only), in the menu's place: the Crews row's control, which changes the game's crews at
  *  once (the menu opened first, if it isn't); the keyboard in its box, or on a crew's colour with 4 */
 function openCrews() {
@@ -1885,7 +1956,7 @@ function popFriendsFocus() {
 function drawPopFriends() {
   const box = $('#menu-friends-box'), had = box.contains(document.activeElement);
   // (the line on Join only where a friend has one)
-  $('#menu-friends-help').hidden = !friendPrompt.drawPlaced(box, room => void joinFriend(room));
+  $('#menu-friends-help').hidden = !friendPrompt.drawPlaced(box, f => void joinFriend(f), !!session?.input?.travelFriend && !!travelNow());
   if (had && !box.contains(document.activeElement)) popFriendsFocus();   // (the field keeps it: friends.ts AskField)
 }
 /** the race lobby card's Invite (its key, a click or a tap): the menu's Friends, whose friends in this room each
@@ -1913,17 +1984,42 @@ function joinCrew(crew: string, room: string) {
   });
 }
 /** a Join in the menu's Friends: that friend's room, at once, and back to the game */
-async function joinFriend(room: string) {
+/** The menu's Friends, a friend's Join: its world, at once, as an invite link's Join, when it is another; then the game
+ *  goes to it (runtime/travel.c: to its race track, if it is at one, then behind its car), and the line says why when
+ *  it could not (the game's "travel_said": watchSaid) */
+async function joinFriend(f: Friend) {
   const m = $<HTMLDialogElement>('#menu'); if (m.open) m.close();
-  // (the friend's page named the room: checked as a link's room is)
-  const inv = tidyInvite({ room }), ok = checkInvite(inv);
-  if (!ok.ok) {
-    log.add(`[app] the menu's Friends: not joining a friend's room: ${ok.why}`);
-    tell(t('This invite link cannot be used: {why}.', { why: tvars(ok.why, ok.v).replace(/[.。]$/, '') }));
-    return;
+  if (f.room !== undefined && !sameName(f.room, roamRoom ?? '')) {
+    // (the friend's page named the room: checked as a link's room is)
+    const inv = tidyInvite({ room: f.room }), ok = checkInvite(inv);
+    if (!ok.ok) {
+      log.add(`[app] the menu's Friends: not joining a friend's room: ${ok.why}`);
+      tell(t('This invite link cannot be used: {why}.', { why: tvars(ok.why, ok.v).replace(/[.。]$/, '') }));
+      return;
+    }
+    log.add('[app] the menu\'s Friends: joining a friend\'s room');
+    tell(joinedText(await applyInvite(inv)));
   }
-  log.add('[app] the menu\'s Friends: joining a friend\'s room');
-  tell(joinedText(await applyInvite(inv)));
+  const game = session;
+  if (!game?.input?.travelFriend || !travelNow()) return;
+  const before = travelSaid(game.status?.read()?.get('travel_said'), -1)?.n ?? 0;
+  log.add(`[app] the menu's Friends: going to a friend (${f.name})`);
+  if (game.input.travelFriend(roomHash(f.name), friendSpot(f.room, f.at))) watchSaid(f.name, before);
+}
+/** the game's word on a trip to friend `name` (travel.c said), a line when it could not go there, watched up to a minute
+ *  (two loads and the wait to see the friend); before: the word's count when it was asked */
+function watchSaid(name: string, before: number) {
+  const game = session, until = performance.now() + 60000;
+  const timer = setInterval(() => {
+    const s = travelSaid(game?.status?.read()?.get('travel_said'), before);
+    if (!s && performance.now() < until && session === game) return;
+    clearInterval(timer);
+    if (!s) return;
+    log.add(`[app] the trip to a friend: ${s.what}${s.why ? ` (${s.why})` : ''}`);
+    if (s.what === SAID_LOCKED) tell(t('{name} is in a part of the city your career hasn\'t opened yet.', { name }));
+    else if (s.what === SAID_NOT_FOUND) tell(t('{name} could not be found in free roam.', { name }));
+    else if (s.what === SAID_NOT_NOW && whyText(s.why)) tell(whyText(s.why));
+  }, 250);
 }
 
 // --------------------------------------------------------- invite links --
@@ -1982,7 +2078,7 @@ async function applyInvite(given: Invite): Promise<Joined> {
   }
   if (text !== was) {
     await settingsFile.write(text);
-    void settings.refresh(); players?.now(); vault?.changed(); friendsPanel?.render();
+    void settings.refresh(); players?.now(); vault?.changed(); friendsPanel?.render(); evaluate();
   }
   // (the names, for the log as it leaves the browser: privacy.ts)
   if (isOwn(inv.room ?? '')) privacy.name(inv.room, 'room');
@@ -2160,6 +2256,7 @@ async function menuAction(act: string) {
       break;
     }
     case 'worlds': openWorlds(); break;
+    case 'tracks': openTracks(); break;
     case 'crews': openCrews(); break;
     case 'friends': openFriends(); break;
     case 'back': menuPage('main'); break;
@@ -2497,6 +2594,7 @@ export async function boot() {
       if (packsKey() !== packsKey(resolveEnv(was, ENVIRONMENT, {}, DEVICE))) void saves.refresh();
       vault?.changed(); players?.now();
       friendsPanel?.render();
+      evaluate();
       applyLanguage();
       siteKeysNow();
     },
@@ -2634,8 +2732,8 @@ export async function boot() {
   touch = new TouchControls($('#stage'), { toast, log: logLine, chat: () => quickChat.toggle(), chatOn: () => quickChat.enabled,
     settings: () => openHelp('keys') });
   friendPrompt = new FriendPrompt($('#stage'), {
-    send: m => session?.net?.friend?.(m) ?? false, room: () => roamRoom ?? '', log: logLine, place: placeNotices,
-    toast: (s, o) => toast(o?.name ? named(s, o.name) : s, 5000, false, o?.hot ? 'hot' : ''),
+    send: m => session?.net?.friend?.(m) ?? false, room: () => roamRoom ?? '', spot: () => travelNow()?.at ?? null,
+    log: logLine, place: placeNotices, toast: (s, o) => toast(o?.name ? named(s, o.name) : s, 5000, false, o?.hot ? 'hot' : ''),
     notice: friendNotice, menu: menuName, placed: () => { if (menuOn('friends')) drawPopFriends(); },
     hosted: () => lobbyPanel.hosted(), joinLobby: (host, lobby, race) => session?.input?.lobby?.(LB_JOIN, host, lobby, race) ?? false,
     api: friendsApi, driving: () => quickChat.driving(),

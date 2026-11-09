@@ -188,7 +188,7 @@ export const MODS: readonly Mod[] = [
     kind: 'screen', uses: 'data', control: { setting: 'hq_vinyls' },
     line: N('Sharp vinyls and doorlines.'),
     details: 'Every vinyl and doorline of the 31 cars redrawn at 1024x1024, so a car\'s paint stays sharp up close, with the game\'s own designs, colours and shine. A car with one of Art Factory 28 to 34 keeps the game\'s look. On a computer only: phones keep the game\'s. Each car\'s pictures download as you see it, about 100 KB.',
-    online: 'mine', files: ['runtime/hqvinyls.c', 'web/src/gpu/hqskin.ts', 'tools/hqvinyls.py'],
+    online: 'mine', phones: 'off', files: ['runtime/hqvinyls.c', 'web/src/gpu/hqskin.ts', 'tools/hqvinyls.py'],
   },
   {
     id: 'gearbox-whine', name: 'Transmission Whine', mod: 'Underground 2 Transmission Whine',
@@ -226,7 +226,7 @@ export const MODS: readonly Mod[] = [
     links: { page: 'https://nfsmods.xyz/mod/1687', source: 'https://github.com/ArchieGoldmill/NFSU2_StanceMod' },
     kind: 'shared', uses: 'findings', control: { setting: 'stance' },
     line: N('Camber, offset and tire width for each car.'),
-    details: 'Body Shop, Stance (after Rims): each car\'s camber front and rear, how far its wheels stand out and how wide its tires are, on sliders with the car in view. Only what is seen changes: the car drives as in the original game. In free roam other players see your car\'s stance, unless they set Mods on other cars to Original. Your saves still work in the original game: the stance is kept beside the profile, and stays there while this is off.',
+    details: 'Each car\'s camber front and rear, how far its wheels stand out and how wide its tires are; only the look changes, the car drives as in the original game. To use it: turn it on, go to the garage\'s Body Shop and pick Stance (after Rims), choose a slider with up and down, move it with left and right, and Back keeps it for that car. In free roam other players see your car\'s stance, unless they set Mods on other cars to Original. Your saves still work in the original game: the stance is kept beside the profile, and stays there while this is off.',
     online: 'seen', files: ['runtime/stance.c', 'runtime/stance.h'],
   },
   {

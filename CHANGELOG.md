@@ -11,19 +11,35 @@ first, then under `### Fixes` what was broken and works now, which the popup kee
 insides, the forum bot, logs, tests, docs and cheat checks. A change that may or may not belong here is asked about
 before the release, not guessed.
 
-## 2026-11-08 (a79bffd)
+## 2026-11-08 (314555b)
 
-- **Mods:** Crash Damage, Chrystian Farias's Crashing Foreign Cars: the racers' cars dent where they are hit, scratch, break their lights and lose loose parts. Only the looks change; in free roam, players who have it on see each other's damage (off by default).
-- **Mods:** Transmission Whine, ropi's mod: NFS Carbon's gearbox whine over your car's engine, for each player's car in split screen (off by default).
-- **Mods:** Rubberbanding, by 007hacky007: your career races' catch-up as in the original game, No boost (rivals ahead still wait, none behind gets faster) or Off.
-- **Free roam:** your own license plate: up to 8 letters and digits in Settings, Online, on your car for everyone in free roam. Races between players keep the game's plates.
+- **Free roam:** your own license plate (up to 8 letters and digits, Settings, Online), seen by everyone in free roam.
+- **Mods:** Stance, Archie (AR4I)'s mod: each car's camber, wheel offset and tire width in the Body Shop (off by default).
+- **Lobby races:** the Corolla has a little less power in circuit, sprint and URL races.
+- **Mods:** Crash Damage, Chrystian Farias's Crashing Foreign Cars: dents, scratches and lost parts, looks only (off by default).
+- **Mods:** HQ Vinyls & Doorlines, AdrienShadow's mod: sharper vinyls on a computer (off by default).
+- **Graphics:** anti-aliasing for smoother edges, on for new players on a computer.
+- **Mods:** Rubberbanding, by 007hacky007: the career races' catch-up as original, No boost or Off.
+- **Free roam:** Join in Friends takes you right behind your friend's car.
+- **Free roam:** Tracks in F9: drive the race tracks with other players.
+- **Races:** other players' cars sound with their own engines.
+- **Mods:** Transmission Whine, ropi's mod: NFS Carbon's gearbox whine (off by default).
+- **Graphics:** sharper roads and buildings at an angle on a computer.
+- **Minimap:** hides other players when the world map's legend does.
+- **Start page:** with free roam on, it says to play the career to meet others.
 
 ### Fixes
 
-- **Free roam:** error 134 at a race's results, or after an hour in a busy free roam, when other players' cars opened their hoods, trunks and doors is fixed.
-- **Free roam:** exhaust tips keep their own colour instead of taking on other players' paint as their cars drive by.
-- **Saves:** a profile from a modded game shows its cars this game doesn't have as stock cars, and your save keeps them as they were unless you change them here.
-- **Saves:** Art Factory 28 to 34 vinyls are kept beside your profile, so the profile holds only what the PC game knows; here they come back.
+- **Free roam:** error 134 at a race's results or in a busy free roam.
+- **Free-roam races:** the host's Restart works every time, and slow players are no longer sent to the main menu between heats.
+- **Dyno:** setups are kept with autosave off.
+- **Cameras:** your view comes back after a drift race.
+- **Saves:** a modded game's profile loads, its extra cars shown as stock cars.
+- **Free-roam races:** the crib's menu no longer covers a career win's movie.
+- **Free roam:** nitrous purges keep their kit's colour at car meets.
+- **Free roam:** exhaust tips keep their own colour.
+- **Controllers:** a touch pad no longer keeps the view turned.
+- **Saves:** Art Factory 28 to 34 vinyls are kept beside your profile.
 
 ## 2026-11-07 (b58448b)
 

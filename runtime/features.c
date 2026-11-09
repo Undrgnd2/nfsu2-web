@@ -30,6 +30,7 @@ static const struct { const char *name; void (*install)(void); unsigned builds; 
     { "menusize",    menusize_install,    FT_WEB },   /* the help bar's buttons at the page's menu button size */
     { "olfilter",    olfilter_install,    FT_ALL },   /* the Online lobby's Filter, once set, narrows its list */
     { "tunegraph",   tunegraph_install,   FT_WEB },   /* the tuning graphs' dots follow a press and a drag (touch) */
+    { "dyno",        dyno_install,        FT_ALL },   /* the dyno's Save Profile and Quit Tuning keep its setups in the car */
     { "regional",    regional_install,    FT_ALL },   /* the European game's Corsa and 106 for sale, and AI racers' cars */
     { "garage",      garage_install,      FT_ALL },   /* the career garage's slots 6-10 and Trade Car */
     { "vinylpacks",  vinylpacks_install,  FT_ALL },   /* the Japanese release's Art Factory 28-34 (VINYLPACKS) */
@@ -63,6 +64,7 @@ static const struct { const char *name; int (*hook)(CPU *c, uint32_t ip); } k_ho
     { "drift",       drift_hook },         /* drift mode's and race_music's music */
     { "quickrace",   quickrace_hook },     /* Quick Race's laps and opponents */
     { "trafficcars", trafficcars_hook },   /* a traffic vehicle as the player's car */
+    { "travel",      travel_hook },        /* the World Map shut on a race track's map */
     { "damage",      damage_hook },        /* crash damage on the cars' meshes */
 };
 
@@ -89,6 +91,7 @@ static const struct { const char *name; void (*frame)(CPU *c); } k_frames[] = {
     { "whine",       f_whine },                /* the gearbox whine (gearbox_whine) */
     { "carspot",     f_carspot },              /* the career's kept spot, if no place, the new career's start */
     { "walls",       f_walls },                /* a car past the career's walls back on the roads it can reach */
+    { "travel",      travel_frame },           /* Tracks: free roam on a race track's map (F9) and back */
     { "mprace",      mprace_frame },           /* a multiplayer race's trip from free roam and back */
     { "mpcredit",    mpcredit_frame },         /* a multiplayer race's win that waits for the crib */
     { "roam_game",   f_roam_game },            /* the multiplayer feature */
@@ -97,6 +100,7 @@ static const struct { const char *name; void (*frame)(CPU *c); } k_frames[] = {
     { "optslider",   optslider_frame },        /* our option sliders' copied parts (the pause menu's Horn Volume) */
     { "stance",      stance_frame },           /* the Stance page's look */
     { "drift",       drift_frame },            /* drift mode in free roam (F2) */
+    { "cameras",     cameras_frame },          /* the player's view after a drift event (after drift mode's camera) */
     { "showoff",     showoff_frame },          /* the car's trunk, hood and doors open */
     { "plates",      plates_frame },           /* license plates with the players' own text */
     { "lightkey",    lightkey_frame },         /* the headlights on G (off, high beam), friends' too */
