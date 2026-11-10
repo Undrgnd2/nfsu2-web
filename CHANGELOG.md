@@ -11,6 +11,10 @@ first, then under `### Fixes` what was broken and works now, which the popup kee
 insides, the forum bot, logs, tests, docs and cheat checks. A change that may or may not belong here is asked about
 before the release, not guessed.
 
+## 2026-11-10 (5166ed1)
+
+- **Free roam:** free chat: type a message to the players near you (I then 0 on a computer; on a touch screen, the chat button, Message a friend, Everyone nearby), under a claimed name.
+
 ## 2026-11-08 (314555b)
 
 - **Free roam:** your own license plate (up to 8 letters and digits, Settings, Online), seen by everyone in free roam.
